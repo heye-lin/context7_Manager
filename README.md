@@ -209,6 +209,32 @@ Authorization: Bearer <GATEWAY_TOKEN>
 - 当前项目默认是 `source` 构建类型，不再执行在线 `git pull`；如发现新版本，请通过 CI/CD、Release 包或手动部署更新，完成后重启服务。
 - 该设计避免在生产运行进程中直接修改工作区代码，也避免覆盖线上临时文件。
 
+
+## Page-triggered Updates
+
+The update button is safe by default: `UPDATE_MODE=disabled` only checks for updates and shows deployment commands.
+
+Supported execution modes:
+
+- `UPDATE_MODE=disabled`: show commands only.
+- `UPDATE_MODE=webhook`: call `UPDATE_WEBHOOK_URL` with `Authorization: Bearer <UPDATE_WEBHOOK_TOKEN>`.
+- `UPDATE_MODE=command`: execute the fixed `UPDATE_COMMAND` on the server. Only use a controlled script path.
+
+Recommended production setup is webhook or a fixed script:
+
+```text
+UPDATE_MODE=command
+UPDATE_COMMAND=/root/context7_Manager/scripts/update-prod.sh
+```
+
+Make the script executable on Linux:
+
+```bash
+chmod +x scripts/update-prod.sh
+```
+
+Do not expose Docker socket or arbitrary shell command execution to the public internet.
+
 ## Release Commands
 
 Pushing to `main` automatically publishes the `latest` GHCR image and creates a prerelease named like `v0.1.0-build.123`. Run one of the commands below when you want a formal semver Release tag.

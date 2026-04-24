@@ -142,6 +142,9 @@ function publicSettings(options) {
     encryptionKeyConfigured: Boolean(getConfigValue(options, 'ENCRYPTION_KEY', options.encryptionKey || defaultEncryptionKey)),
     gatewayTokenConfigured: Boolean(getConfigValue(options, 'GATEWAY_TOKEN', options.gatewayToken)),
     gatewayTokenPreview: maskSecret(getConfigValue(options, 'GATEWAY_TOKEN', options.gatewayToken)),
+    updateCommandConfigured: Boolean(getConfigValue(options, 'UPDATE_COMMAND')),
+    updateMode: getConfigValue(options, 'UPDATE_MODE', process.env.UPDATE_MODE || 'disabled'),
+    updateWebhookConfigured: Boolean(getConfigValue(options, 'UPDATE_WEBHOOK_URL')),
   };
 }
 
@@ -153,6 +156,10 @@ function settingsUpdates(input = {}) {
     context7BaseUrl: 'CONTEXT7_BASE_URL',
     encryptionKey: 'ENCRYPTION_KEY',
     gatewayToken: 'GATEWAY_TOKEN',
+    updateCommand: 'UPDATE_COMMAND',
+    updateMode: 'UPDATE_MODE',
+    updateWebhookToken: 'UPDATE_WEBHOOK_TOKEN',
+    updateWebhookUrl: 'UPDATE_WEBHOOK_URL',
   };
   const updates = {};
   for (const [inputKey, envKey] of Object.entries(mapping)) {
@@ -601,6 +608,10 @@ export function createServer(options = {}) {
       dockerImage: options.dockerImage || process.env.DOCKER_IMAGE,
       repository: options.updateRepository,
       rootDir,
+      updateCommand: options.updateCommand || getConfigValue({ ...options, envConfig }, 'UPDATE_COMMAND', process.env.UPDATE_COMMAND),
+      updateMode: options.updateMode || getConfigValue({ ...options, envConfig }, 'UPDATE_MODE', process.env.UPDATE_MODE || 'disabled'),
+      updateWebhookToken: options.updateWebhookToken || getConfigValue({ ...options, envConfig }, 'UPDATE_WEBHOOK_TOKEN', process.env.UPDATE_WEBHOOK_TOKEN),
+      updateWebhookUrl: options.updateWebhookUrl || getConfigValue({ ...options, envConfig }, 'UPDATE_WEBHOOK_URL', process.env.UPDATE_WEBHOOK_URL),
     }),
     pool: options.pool || (useProductionPool ? createProductionPool(productionOptions) : createAccountPool()),
   };

@@ -127,3 +127,74 @@ test('update service falls back to latest main commit when release is missing', 
     globalThis.fetch = originalFetch;
   }
 });
+
+function mockUpdateFetch({ webhookResponse } = {}) {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    calls.push({ options, url: String(url) });
+    if (String(url).includes('/releases/latest')) return { ok: false, status: 404 };
+    if (String(url).includes('/commits/main')) {
+      return {
+        ok: true,
+        async json() {
+          return { sha: 'abcdef1234567890', commit: { message: 'new build' } };
+        },
+      };
+    }
+    return webhookResponse || {
+      ok: true,
+      status: 202,
+      async text() {
+        return JSON.stringify({ queued: true });
+      },
+    };
+  };
+  return { calls, restore: () => { globalThis.fetch = originalFetch; } };
+}
+
+test('update service can execute webhook update mode', async () => {
+  const mock = mockUpdateFetch();
+  try {
+    const service = createUpdateService({
+      buildType: 'docker',
+      currentCommit: '1111111111111111',
+      currentVersion: '0.1.0',
+      repository: 'owner/repo',
+      updateMode: 'webhook',
+      updateWebhookToken: 'hook-secret',
+      updateWebhookUrl: 'https://deploy.example.com/context7',
+    });
+    const result = await service.performUpdate();
+    const webhookCall = mock.calls.find((call) => call.url === 'https://deploy.example.com/context7');
+
+    assert.equal(result.executed, true);
+    assert.equal(result.update_execution_mode, 'webhook');
+    assert.equal(result.execution.statusCode, 202);
+    assert.equal(webhookCall.options.method, 'POST');
+    assert.equal(webhookCall.options.headers.authorization, 'Bearer hook-secret');
+  } finally {
+    mock.restore();
+  }
+});
+
+test('update service can execute command update mode', async () => {
+  const mock = mockUpdateFetch();
+  try {
+    const service = createUpdateService({
+      buildType: 'docker',
+      currentCommit: '1111111111111111',
+      currentVersion: '0.1.0',
+      repository: 'owner/repo',
+      updateCommand: 'node -e "console.log(\'updated\')"',
+      updateMode: 'command',
+    });
+    const result = await service.performUpdate();
+
+    assert.equal(result.executed, true);
+    assert.equal(result.update_execution_mode, 'command');
+    assert.match(result.execution.stdout, /updated/);
+  } finally {
+    mock.restore();
+  }
+});

@@ -95,6 +95,9 @@ test('security page keeps env controls and explains mcp gateway access', async (
     assert.match(html, /id="performUpdateButton"/);
     assert.match(html, /id="updateCommandBox"/);
     assert.match(html, /id="updateCommands"/);
+    assert.match(html, /id="settingsUpdateMode"/);
+    assert.match(html, /id="settingsUpdateWebhookUrl"/);
+    assert.match(html, /id="settingsUpdateCommand"/);
     assert.match(html, /检查并更新/);
     assert.match(html, /版本更新/);
     assert.match(html, /id="logoutButton"/);

@@ -74,6 +74,11 @@
               <strong id="encryptionKeyStatus">-</strong>
               <small>加密本地保存的 Context7 Key</small>
             </article>
+            <article class="statCard">
+              <span>UPDATE_MODE</span>
+              <strong id="updateModeStatus">-</strong>
+              <small id="updateExecutorStatus">一键更新默认关闭</small>
+            </article>
           </div>
         </section>
 
@@ -164,6 +169,30 @@
               Audit Log Path
               <input id="settingsAuditLogPath" name="auditLogPath" type="text" placeholder="data/audit-logs.json" />
               <span class="fieldHint">调用日志保存路径。</span>
+            </label>
+            <label>
+              Update Mode
+              <select id="settingsUpdateMode" name="updateMode">
+                <option value="disabled">disabled - 只展示更新命令</option>
+                <option value="webhook">webhook - 调用宿主机更新服务</option>
+                <option value="command">command - 执行服务端白名单命令</option>
+              </select>
+              <span class="fieldHint">生产推荐 webhook；未配置时页面不会真正执行更新。</span>
+            </label>
+            <label>
+              Update Webhook URL
+              <input id="settingsUpdateWebhookUrl" name="updateWebhookUrl" type="url" placeholder="https://your-host/update-hook" />
+              <span class="fieldHint">UPDATE_MODE=webhook 时调用，留空表示不修改。</span>
+            </label>
+            <label>
+              Update Webhook Token
+              <input id="settingsUpdateWebhookToken" name="updateWebhookToken" type="password" placeholder="留空表示不修改 UPDATE_WEBHOOK_TOKEN" autocomplete="new-password" />
+              <span class="fieldHint">会以 Authorization: Bearer 发送给 webhook。</span>
+            </label>
+            <label>
+              Update Command
+              <input id="settingsUpdateCommand" name="updateCommand" type="text" placeholder="留空表示不修改 UPDATE_COMMAND" />
+              <span class="fieldHint">UPDATE_MODE=command 时执行；只建议写固定脚本路径。</span>
             </label>
             <div class="buttonGroup formActions">
               <button type="submit">保存到 .env 并同步生效</button>

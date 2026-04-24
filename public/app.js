@@ -29,6 +29,10 @@ const elements = {
   settingsEncryptionKey: document.querySelector('#settingsEncryptionKey'),
   settingsForm: document.querySelector('#settingsForm'),
   settingsGatewayToken: document.querySelector('#settingsGatewayToken'),
+  settingsUpdateCommand: document.querySelector('#settingsUpdateCommand'),
+  settingsUpdateMode: document.querySelector('#settingsUpdateMode'),
+  settingsUpdateWebhookToken: document.querySelector('#settingsUpdateWebhookToken'),
+  settingsUpdateWebhookUrl: document.querySelector('#settingsUpdateWebhookUrl'),
   latestVersion: document.querySelector('#latestVersion'),
   performUpdateButton: document.querySelector('#performUpdateButton'),
   adminTokenStatus: document.querySelector('#adminTokenStatus'),
@@ -43,6 +47,8 @@ const elements = {
   totalUsage: document.querySelector('#totalUsage'),
   updateCommandBox: document.querySelector('#updateCommandBox'),
   updateCommands: document.querySelector('#updateCommands'),
+  updateExecutorStatus: document.querySelector('#updateExecutorStatus'),
+  updateModeStatus: document.querySelector('#updateModeStatus'),
   updateResult: document.querySelector('#updateResult'),
   updateState: document.querySelector('#updateState'),
 };
@@ -365,6 +371,13 @@ function renderSettings(settings) {
   elements.settingsContext7BaseUrl.value = settings.context7BaseUrl || '';
   elements.settingsAccountStorePath.value = settings.accountStorePath || '';
   if (elements.settingsAuditLogPath) elements.settingsAuditLogPath.value = settings.auditLogPath || '';
+  if (elements.settingsUpdateMode) elements.settingsUpdateMode.value = settings.updateMode || 'disabled';
+  if (elements.updateModeStatus) elements.updateModeStatus.textContent = settings.updateMode || 'disabled';
+  if (elements.updateExecutorStatus) {
+    const webhook = settings.updateWebhookConfigured ? 'webhook 已配置' : 'webhook 未配置';
+    const command = settings.updateCommandConfigured ? 'command 已配置' : 'command 未配置';
+    elements.updateExecutorStatus.textContent = `${webhook} / ${command}`;
+  }
 }
 
 function renderUpdateInfo(info, { showDetails = false } = {}) {
@@ -514,6 +527,10 @@ function bindSecurityPage() {
       context7BaseUrl: elements.settingsContext7BaseUrl.value.trim(),
       encryptionKey: elements.settingsEncryptionKey.value.trim(),
       gatewayToken: elements.settingsGatewayToken.value.trim(),
+      updateCommand: elements.settingsUpdateCommand?.value.trim() || '',
+      updateMode: elements.settingsUpdateMode?.value || 'disabled',
+      updateWebhookToken: elements.settingsUpdateWebhookToken?.value.trim() || '',
+      updateWebhookUrl: elements.settingsUpdateWebhookUrl?.value.trim() || '',
     };
 
     try {
@@ -522,6 +539,8 @@ function bindSecurityPage() {
       elements.settingsAdminToken.value = '';
       elements.settingsGatewayToken.value = '';
       elements.settingsEncryptionKey.value = '';
+      if (elements.settingsUpdateCommand) elements.settingsUpdateCommand.value = '';
+      if (elements.settingsUpdateWebhookToken) elements.settingsUpdateWebhookToken.value = '';
       renderSettings(data.settings);
       showMessage('设置已保存到 .env，并已同步生效。', 'success');
     } catch (error) {
@@ -563,7 +582,7 @@ function bindUpdateControls() {
         elements.updateResult.hidden = false;
         elements.updateResult.textContent = JSON.stringify(data, null, 2);
       }
-      showMessage(data.need_restart ? '更新操作完成，请重启服务。' : data.message, 'success');
+      showMessage(data.executed ? data.message : (data.need_restart ? '已生成更新命令，请在服务器执行或配置一键更新。' : data.message), 'success');
     } catch (error) {
       showMessage(error.message, 'error');
     } finally {

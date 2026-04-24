@@ -23,7 +23,7 @@ function parseEnv(content) {
 }
 
 function serializeEnv(values) {
-  const order = ['PORT', 'BUILD_TYPE', 'DOCKER_IMAGE', 'ADMIN_TOKEN', 'GATEWAY_TOKEN', 'ENCRYPTION_KEY', 'CONTEXT7_BASE_URL', 'CONTEXT7_MCP_URL', 'ACCOUNT_STORE_PATH', 'AUDIT_LOG_PATH'];
+  const order = ['PORT', 'BUILD_TYPE', 'DOCKER_IMAGE', 'UPDATE_MODE', 'UPDATE_WEBHOOK_URL', 'UPDATE_WEBHOOK_TOKEN', 'UPDATE_COMMAND', 'ADMIN_TOKEN', 'GATEWAY_TOKEN', 'ENCRYPTION_KEY', 'CONTEXT7_BASE_URL', 'CONTEXT7_MCP_URL', 'ACCOUNT_STORE_PATH', 'AUDIT_LOG_PATH'];
   const keys = [...order, ...Object.keys(values).filter((key) => !order.includes(key))];
   return `${keys.filter((key) => values[key] !== undefined).map((key) => `${key}=${values[key]}`).join('\n')}\n`;
 }

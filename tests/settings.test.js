@@ -26,6 +26,7 @@ test('settings API visualizes and updates personal gateway env configuration', a
     'GATEWAY_TOKEN=gateway-current-secret',
     'ENCRYPTION_KEY=encryption-current-secret',
     'CONTEXT7_BASE_URL=https://context7.com',
+    'UPDATE_MODE=disabled',
     'ACCOUNT_STORE_PATH=data/accounts.json',
     '',
   ].join('\n'), 'utf8');
@@ -44,6 +45,9 @@ test('settings API visualizes and updates personal gateway env configuration', a
       assert.equal(listedBody.settings.encryptionKeyConfigured, true);
       assert.equal(listedBody.settings.context7BaseUrl, 'https://context7.com');
       assert.equal(listedBody.settings.accountStorePath, 'data/accounts.json');
+      assert.equal(listedBody.settings.updateMode, 'disabled');
+      assert.equal(listedBody.settings.updateWebhookConfigured, false);
+      assert.equal(listedBody.settings.updateCommandConfigured, false);
       assert.equal(JSON.stringify(listedBody).includes('admin-current-secret'), false);
 
       const updated = await fetch(`${baseUrl}/api/settings`, {
@@ -54,6 +58,10 @@ test('settings API visualizes and updates personal gateway env configuration', a
           gatewayToken: 'gateway-updated-secret',
           context7BaseUrl: 'https://context7.com',
           accountStorePath: 'data/updated-accounts.json',
+          updateCommand: '/opt/context7/update.sh',
+          updateMode: 'command',
+          updateWebhookToken: 'webhook-token-secret',
+          updateWebhookUrl: 'https://deploy.example.com/context7',
         }),
       });
 
@@ -62,6 +70,10 @@ test('settings API visualizes and updates personal gateway env configuration', a
       assert.match(envContent, /ADMIN_TOKEN=admin-updated-secret/);
       assert.match(envContent, /GATEWAY_TOKEN=gateway-updated-secret/);
       assert.match(envContent, /ACCOUNT_STORE_PATH=data\/updated-accounts\.json/);
+      assert.match(envContent, /UPDATE_COMMAND=\/opt\/context7\/update\.sh/);
+      assert.match(envContent, /UPDATE_MODE=command/);
+      assert.match(envContent, /UPDATE_WEBHOOK_TOKEN=webhook-token-secret/);
+      assert.match(envContent, /UPDATE_WEBHOOK_URL=https:\/\/deploy\.example\.com\/context7/);
 
       const oldSession = await fetch(`${baseUrl}/api/session`, {
         headers: { authorization: 'Bearer admin-current-secret' },

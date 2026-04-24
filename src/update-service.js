@@ -1,9 +1,18 @@
+import { exec as execCallback } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 const defaultRepository = 'heye-lin/context7_Manager';
 const cacheTtlMs = 20 * 60 * 1000;
 const defaultDockerImage = 'ghcr.io/heye-lin/context7_manager:latest';
+const exec = promisify(execCallback);
+const commandTimeoutMs = 10 * 60 * 1000;
+
+function normalizeUpdateMode(mode = 'disabled') {
+  const normalized = String(mode || 'disabled').trim().toLowerCase();
+  return ['command', 'disabled', 'webhook'].includes(normalized) ? normalized : 'disabled';
+}
 
 function normalizeVersion(version = '') {
   return String(version).trim().replace(/^v/i, '') || '0.0.0';
@@ -46,6 +55,50 @@ function updateCommands(dockerImage) {
       'docker compose up -d --build',
     ],
   };
+}
+
+function truncate(value = '', maxLength = 4000) {
+  const text = String(value || '');
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+}
+
+async function runWebhookUpdate({ webhookToken, webhookUrl }) {
+  if (!webhookUrl) {
+    const error = new Error('UPDATE_WEBHOOK_URL is required when UPDATE_MODE=webhook');
+    error.status = 500;
+    throw error;
+  }
+  const headers = { 'content-type': 'application/json' };
+  if (webhookToken) headers.authorization = `Bearer ${webhookToken}`;
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ action: 'update', service: 'context7-manager' }),
+  });
+  const text = await response.text();
+  let body = text;
+  try {
+    body = text ? JSON.parse(text) : null;
+  } catch {
+    body = text;
+  }
+  if (!response.ok) {
+    const error = new Error(`Update webhook returned ${response.status}`);
+    error.status = 502;
+    error.details = body;
+    throw error;
+  }
+  return { response: body, statusCode: response.status };
+}
+
+async function runCommandUpdate(command) {
+  if (!command) {
+    const error = new Error('UPDATE_COMMAND is required when UPDATE_MODE=command');
+    error.status = 500;
+    throw error;
+  }
+  const { stdout, stderr } = await exec(command, { timeout: commandTimeoutMs, windowsHide: true });
+  return { stderr: truncate(stderr), stdout: truncate(stdout) };
 }
 
 function releaseToInfo(release, currentVersion, buildType, context = {}) {
@@ -102,9 +155,14 @@ export function createUpdateService({
   dockerImage = process.env.DOCKER_IMAGE || defaultDockerImage,
   repository = defaultRepository,
   rootDir = process.cwd(),
+  updateCommand = process.env.UPDATE_COMMAND,
+  updateMode = process.env.UPDATE_MODE || 'disabled',
+  updateWebhookToken = process.env.UPDATE_WEBHOOK_TOKEN,
+  updateWebhookUrl = process.env.UPDATE_WEBHOOK_URL,
 } = {}) {
   let cache = null;
   let cacheTime = 0;
+  const activeUpdateMode = normalizeUpdateMode(updateMode);
 
   async function version() {
     return normalizeVersion(currentVersion || await readPackageVersion(rootDir));
@@ -171,9 +229,10 @@ export function createUpdateService({
       throw error;
     }
 
-    return {
+    const result = {
       build_type: buildType,
       current_commit: info.current_commit,
+      executed: false,
       latest_commit: info.latest_commit,
       message: buildType === 'docker'
         ? `Update available. Pull latest image ${dockerImage} and recreate the container.`
@@ -182,8 +241,21 @@ export function createUpdateService({
       release_info: info.release_info,
       commit_info: info.commit_info,
       update_commands: info.update_commands || updateCommands(dockerImage),
+      update_execution_mode: activeUpdateMode,
       update_mode: info.update_mode,
     };
+
+    if (activeUpdateMode === 'disabled') {
+      return result;
+    }
+
+    if (activeUpdateMode === 'webhook') {
+      const execution = await runWebhookUpdate({ webhookToken: updateWebhookToken, webhookUrl: updateWebhookUrl });
+      return { ...result, executed: true, execution, message: 'Update webhook executed. The service may restart shortly.' };
+    }
+
+    const execution = await runCommandUpdate(updateCommand);
+    return { ...result, executed: true, execution, message: 'Update command executed. The service may restart shortly.' };
   }
 
   return { check, performUpdate, version };

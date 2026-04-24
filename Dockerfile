@@ -14,6 +14,8 @@ LABEL org.opencontainers.image.source="https://github.com/heye-lin/context7_Mana
 LABEL org.opencontainers.image.version=$VERSION
 LABEL org.opencontainers.image.revision=$COMMIT
 
+RUN apk add --no-cache docker-cli docker-cli-compose
+
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev || npm install --omit=dev
 

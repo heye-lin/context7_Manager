@@ -15,8 +15,14 @@ services:
       CONTEXT7_MCP_URL: ${CONTEXT7_MCP_URL:-https://mcp.context7.com/mcp}
       ACCOUNT_STORE_PATH: /app/data/accounts.json
       AUDIT_LOG_PATH: /app/data/audit-logs.json
+      UPDATE_MODE: ${UPDATE_MODE:-disabled}
+      UPDATE_COMMAND: ${UPDATE_COMMAND:-}
+      UPDATE_WEBHOOK_URL: ${UPDATE_WEBHOOK_URL:-}
+      UPDATE_WEBHOOK_TOKEN: ${UPDATE_WEBHOOK_TOKEN:-}
     volumes:
       - context7-data:/app/data
+      - .:/root/context7_Manager
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]

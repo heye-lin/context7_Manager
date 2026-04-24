@@ -211,7 +211,7 @@ Authorization: Bearer <GATEWAY_TOKEN>
 
 ## Release Commands
 
-Run one of the commands below locally to bump `package.json`, create a `v*` tag, and push it to GitHub. The tag push triggers GitHub Actions to create a Release and publish the GHCR image.
+Pushing to `main` automatically publishes the `latest` GHCR image and creates a prerelease named like `v0.1.0-build.123`. Run one of the commands below when you want a formal semver Release tag.
 
 ```bash
 npm run release:patch  # 0.1.0 -> 0.1.1

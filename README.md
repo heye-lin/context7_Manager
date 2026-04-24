@@ -1,21 +1,23 @@
 # Context7 号池网关
 
-一个面向生产基线的 Context7 号池网关，包含 Node.js 后端 API 和原生 HTML/CSS/JS 管理后台。后端负责保存、加密、调度 Context7 API Key，并通过网关接口代理调用 Context7 上游。
+一个面向个人 Context7 Key 管理的号池网关，包含 Node.js 后端 API 和原生 HTML/CSS/JS 管理后台。项目负责加密保存 Context7 Key、维护账号健康状态、支持单账号测试并记录自动获取到的账号剩余额度。
 
-## 生产基线能力
+## 功能
 
-- 管理后台使用 `ADMIN_TOKEN` 鉴权
-- 网关 API 使用独立 `GATEWAY_TOKEN` 鉴权
-- Context7 Key AES-256-GCM 加密后存储
-- 账号列表只返回脱敏 `tokenPreview`
-- 网关代理自动注入 `Authorization: Bearer <Context7 Key>`
-- 成功/失败自动回写账号健康统计
-- 网关调用审计事件，不保存明文 token
-- `/healthz` 和 `/readyz` 健康检查
-- Dockerfile、docker-compose 和 `.env.example`
-- 可选 JSON 文件持久化，重启后恢复加密账号
+- 管理后台使用 `ADMIN_TOKEN` 鉴权。
+- 网关调用使用独立 `GATEWAY_TOKEN` 鉴权。
+- Context7 Key 使用 AES-256-GCM 加密后持久化。
+- 账号列表只返回脱敏后的 `tokenPreview`，不返回明文 Key。
+- 账号池管理页支持新增、启停、删除、搜索和筛选账号。
+- 每个账号卡片提供“账号测试”按钮，使用该账号请求 Context7，并从 `RateLimit-Remaining` / `X-RateLimit-Remaining` 响应头自动更新剩余额度。
+- `/healthz` 和 `/readyz` 用于健康检查。
+- 支持内存仓库和 JSON 文件仓库；生产建议配置 `ACCOUNT_STORE_PATH`。
 
-> 当前支持内存仓储和 JSON 文件仓储。高并发或多实例生产部署建议下一步替换为 PostgreSQL/SQLite repository。
+## 前置条件
+
+- Node.js `>=20`
+- npm
+- 可选：Docker 和 Docker Compose
 
 ## 配置
 
@@ -25,49 +27,63 @@
 Copy-Item .env.example .env
 ```
 
-必须设置在项目根目录 `.env` 中；服务会读取 `G:\1-demo\context7_Manager\.env`，并在请求时检测变更，`ADMIN_TOKEN` / `GATEWAY_TOKEN` 修改后无需重启即可生效：
-
-```powershell
-$env:ADMIN_TOKEN="替换为长随机管理令牌"
-$env:GATEWAY_TOKEN="替换为长随机网关调用令牌"
-$env:ENCRYPTION_KEY="替换为长随机加密密钥"
-$env:CONTEXT7_BASE_URL="https://context7.com"
-$env:ACCOUNT_STORE_PATH="data/accounts.json"
-```
-
-也可以直接编辑 `.env`：
+至少设置以下变量：
 
 ```text
-ADMIN_TOKEN=管理后台长随机令牌
-GATEWAY_TOKEN=网关调用长随机令牌
-ENCRYPTION_KEY=加密长随机密钥
+PORT=3000
+ADMIN_TOKEN=replace-with-a-long-random-admin-token
+GATEWAY_TOKEN=replace-with-a-long-random-gateway-token
+ENCRYPTION_KEY=replace-with-a-long-random-encryption-secret
 CONTEXT7_BASE_URL=https://context7.com
+CONTEXT7_MCP_URL=https://mcp.context7.com/mcp
 ACCOUNT_STORE_PATH=data/accounts.json
+AUDIT_LOG_PATH=data/audit-logs.json
 ```
 
-不要把真实 Context7 API Key 写入代码、README 或提交到仓库。请通过管理后台新增账号。
+变量说明：
+
+- `PORT`：HTTP 服务端口，默认 `3000`。
+- `ADMIN_TOKEN`：访问管理后台和管理 API 的令牌。
+- `GATEWAY_TOKEN`：外部调用网关 API 的令牌。
+- `ENCRYPTION_KEY`：加密本地 Context7 Key 的密钥；更换后旧数据可能无法解密。
+- `CONTEXT7_BASE_URL`：Context7 上游地址。
+- `CONTEXT7_MCP_URL`：Context7 官方 MCP 远程节点地址，默认 `https://mcp.context7.com/mcp`。
+- `ACCOUNT_STORE_PATH`：加密账号数据 JSON 文件路径。
+
+不要提交真实 `.env`、Context7 API Key、`ADMIN_TOKEN`、`GATEWAY_TOKEN` 或 `ENCRYPTION_KEY`。
 
 ## 本地运行
 
+首次运行前请先复制 `.env.example` 并配置强随机密钥，避免使用开发默认值。
+
 ```bash
+npm install
 npm start
 ```
 
-启动后访问：
+访问：
 
 ```text
 http://localhost:3000
 ```
 
-打开页面后必须先输入 `ADMIN_TOKEN`。未验证时页面会停留在登录页，不会加载账号池数据。网关调试区另行填写 `GATEWAY_TOKEN`，用于调用 `/api/gateway`。
+打开页面后输入 `ADMIN_TOKEN` 登录。账号测试功能在“账号池管理”页面的每个账号卡片上，不再提供独立的网关调试页面。
 
 ## Docker 运行
 
 ```bash
-docker compose up --build
+docker compose --env-file .env up --build
 ```
 
-Compose 会把加密后的账号数据保存到 `context7-data` volume。
+后台运行：
+
+```bash
+docker compose --env-file .env up -d --build
+```
+
+Compose 会把加密账号数据保存到持久化 volume。请定期备份该 volume 或 `ACCOUNT_STORE_PATH` 指向的数据文件。
+
+注意：Compose 默认只持久化 `/app/data`。如果在容器内通过安全设置页写入 `.env`，容器重建后这些 `.env` 变更可能丢失；生产建议以宿主机 `.env` / Compose 环境变量作为配置来源。
 
 ## 测试
 
@@ -79,36 +95,29 @@ npm test
 
 ### Public
 
-- `GET /healthz`：进程健康检查
-- `GET /readyz`：依赖就绪检查
+- `GET /healthz`：进程健康检查。
+- `GET /readyz`：依赖就绪检查。
 
 ### Admin Protected
 
-以下接口需要请求头：
+请求头：
 
 ```text
 Authorization: Bearer <ADMIN_TOKEN>
 ```
 
-- `GET /api/session`：验证管理后台登录态
-- `GET /api/accounts`：查看账号列表，只返回脱敏后的 `tokenPreview`
-- `POST /api/accounts`：新增账号，参数 `{ "name": "主号", "token": "ctx7sk-..." }`
-- `PATCH /api/accounts/:id`：更新名称、Token 或启停状态
-- `DELETE /api/accounts/:id`：删除账号
-- `POST /api/leases`：获取一个可用账号和完整 Token，主要用于受控调试
-- `POST /api/accounts/:id/usage`：记录调用结果
+- `GET /api/session`：验证后台登录状态。
+- `GET /api/settings`：查看服务端 `.env` 配置摘要。
+- `PATCH /api/settings`：更新服务端 `.env` 配置。
+- `GET /api/accounts`：查看账号列表。
+- `POST /api/accounts`：新增账号，参数 `{ "name": "主号", "token": "ctx7sk-..." }`。
+- `PATCH /api/accounts/:id`：更新账号名称、Key、启停状态或剩余额度。
+- `DELETE /api/accounts/:id`：删除账号。
+- `POST /api/accounts/:id/test`：使用指定账号测试 Context7，并自动回写调用统计和剩余额度。
+- `POST /api/leases`：获取一个可用账号和完整 Token，主要用于受控自检。
+- `POST /api/accounts/:id/usage`：记录调用结果。
 
-### Gateway Protected
-
-网关调用接口使用独立令牌：
-
-```text
-Authorization: Bearer <GATEWAY_TOKEN>
-```
-
-- `POST /api/gateway`：通过号池代理调用 Context7 上游
-
-### 网关调用示例
+账号测试请求体示例：
 
 ```json
 {
@@ -117,11 +126,85 @@ Authorization: Bearer <GATEWAY_TOKEN>
 }
 ```
 
-## 下一步生产增强
+字段说明：
 
-- 替换 JSON 文件 repository 为 PostgreSQL/SQLite 持久化
-- 面向个人账户增加调用方 API Key 和限流，不做租户隔离
-- 增加连续失败熔断、冷却期和自动恢复探测
-- 输出结构化 JSON 日志和 Prometheus 指标
-- 后台增加调用日志查询、账号配额和健康仪表盘
-- 安全设置页已支持可视化管理 `.env` 中的 token、上游地址和存储路径
+- `method`：可选，默认 `GET`。
+- `path`：可选，默认 `/api/v2/libs/search?query=react`。
+- `body`：可选，非 `GET` / `DELETE` 请求时会作为 JSON 请求体发送。
+
+响应包含：`account`、`success`、`statusCode`、`durationMs`、`upstream`。如果上游返回 `RateLimit-Remaining` 或 `X-RateLimit-Remaining`，服务端会自动更新该账号的 `remainingQuota`。
+
+### Gateway Protected
+
+请求头：
+
+```text
+Authorization: Bearer <GATEWAY_TOKEN>
+```
+
+- `POST /api/gateway`：通过号池代理调用 Context7 上游。该接口保留给程序调用，后台不再提供独立调试页面。
+- `POST /mcp`：透明转发到 Context7 官方 MCP 节点，服务端从账号池轮询 Context7 Key，并向上游注入 `CONTEXT7_API_KEY: <pooled Context7 Key>` 请求头。
+
+示例：
+
+```bash
+curl -X POST http://localhost:3000/api/gateway \
+  -H "Authorization: Bearer <GATEWAY_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"method":"GET","path":"/api/v2/libs/search?query=react"}'
+```
+
+MCP 客户端可把远程地址配置为你的网关，而不是直接配置官方节点：
+
+```toml
+[mcp_servers.context7]
+url = "http://localhost:3000/mcp"
+
+[mcp_servers.context7.headers]
+Authorization = "Bearer <GATEWAY_TOKEN>"
+```
+
+如果部署到服务器：
+
+```toml
+[mcp_servers.context7]
+url = "https://your-domain.com/mcp"
+
+[mcp_servers.context7.headers]
+Authorization = "Bearer <GATEWAY_TOKEN>"
+```
+
+客户端请求 `/mcp` 时必须通过你的网关鉴权层，必须携带：
+
+```text
+Authorization: Bearer <GATEWAY_TOKEN>
+```
+
+`/mcp` 不实现 MCP tools，只做透明代理：请求体原样转发，官方响应原样返回，同时更新账号使用次数、失败次数和剩余额度。
+客户端只向你的网关发送 `Authorization: Bearer <GATEWAY_TOKEN>`；不要把 Context7 API Key 配到 MCP 客户端。客户端的 `Authorization` 不会透传给官方 MCP 节点，官方节点只会收到服务端注入的 `CONTEXT7_API_KEY`。代理响应会额外带 `x-context7-account-id` 和 `x-context7-account-name`，方便排查本次请求使用了哪个账号。
+
+## 生产安全
+
+- 生产必须配置高强度 `ADMIN_TOKEN`、`GATEWAY_TOKEN` 和 `ENCRYPTION_KEY`。
+- 生产必须让 `GATEWAY_TOKEN` 与 `ADMIN_TOKEN` 不同；未配置 `GATEWAY_TOKEN` 时服务端会回退使用 `ADMIN_TOKEN`。
+- 管理后台建议放在 HTTPS 和受控网络之后。
+- 浏览器端会把 `ADMIN_TOKEN` 保存到 `localStorage`，请只在可信设备上使用后台。
+- `POST /api/leases` 会返回完整 Context7 Key，只应在可信管理端用于受控自检。
+- `ACCOUNT_STORE_PATH` 保存的是加密数据，但仍应按敏感数据限制访问和备份。
+- 更换 `ENCRYPTION_KEY` 前请先备份账号数据。
+- 如果登录后账号加载失败，优先检查 `ENCRYPTION_KEY` 是否与旧数据匹配。
+
+## 调用日志
+
+- 控制台“调用日志”页面用于查看整个系统日志，包括登录会话、`/api/gateway`、`/mcp`、账号管理、账号测试、配置变更、租号自检、版本更新和系统错误。
+- 服务端新增 `GET /api/logs` 管理接口，使用 `ADMIN_TOKEN` 鉴权，支持 `limit`、`type`、`success`、`accountId` 查询参数。
+- 配置 `AUDIT_LOG_PATH=data/audit-logs.json` 后日志会持久化保存；不配置时使用内存日志，服务重启后清空。
+- 日志只保存账号 ID、账号名、事件类型、动作、路径、状态码、耗时和成功状态，不保存 Context7 Key 明文或密文。
+
+## 控制台退出与版本更新
+
+- 后台侧边栏提供“退出登录”，会清理浏览器中的 `ADMIN_TOKEN` 并返回 token 拦截登录页。
+- 安全设置页新增“版本更新”，参考 sub2api 的动态更新流程：单个“检查并更新”按钮会先检查 GitHub Release 最新版本，有新版本时再执行更新操作；没有新版本时不会请求更新接口。
+- 系统更新接口为 `GET /api/system/version`、`GET /api/system/check-updates` 和 `POST /api/system/update`，均使用 `ADMIN_TOKEN` 鉴权。
+- 当前项目默认是 `source` 构建类型，不再执行在线 `git pull`；如发现新版本，请通过 CI/CD、Release 包或手动部署更新，完成后重启服务。
+- 该设计避免在生产运行进程中直接修改工作区代码，也避免覆盖线上临时文件。

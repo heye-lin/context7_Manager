@@ -39,10 +39,35 @@ button:hover {
   transform: translateY(-1px);
 }
 
+button:focus-visible,
+.navList a:focus-visible {
+  outline: 3px solid rgba(49, 87, 213, 0.35);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+  transform: none;
+}
+
 button.secondary,
 button.ghostButton {
   background: #edf2ff;
   color: #3157d5;
+}
+
+button.logoutButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e5e7eb;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+button.logoutButton:hover {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: none;
 }
 
 button.danger {
@@ -194,6 +219,21 @@ button.danger {
   padding: 28px;
 }
 
+.topbarActions {
+  display: flex;
+  gap: 10px;
+}
+
+.securityWorkspace {
+  gap: 18px;
+}
+
+.securityHero {
+  background:
+    linear-gradient(135deg, rgba(49, 87, 213, 0.08), rgba(124, 58, 237, 0.08)),
+    rgba(255, 255, 255, 0.94);
+}
+
 .eyebrow,
 .sectionLabel {
   color: #3157d5;
@@ -290,12 +330,20 @@ h2 {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.contentGrid.twoPanels {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .panelHeader {
   align-items: center;
   display: flex;
   gap: 16px;
   justify-content: space-between;
   margin-bottom: 18px;
+}
+
+.compactHeader {
+  margin-bottom: 12px;
 }
 
 .controlsHeader {
@@ -321,6 +369,11 @@ h2 {
 .buttonGroup {
   display: flex;
   gap: 10px;
+}
+
+.formActions,
+.updateActions {
+  justify-content: flex-end;
 }
 
 .inlineForm {
@@ -411,6 +464,99 @@ textarea {
   white-space: pre-wrap;
 }
 
+.compactResult {
+  font-size: 12px;
+  max-height: 260px;
+}
+
+.testResult {
+  display: grid;
+  gap: 14px;
+}
+
+.testSummary {
+  align-items: center;
+  background: #f8faff;
+  border: 1px solid #d7deee;
+  border-radius: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 14px;
+}
+
+.updateSummary {
+  margin-bottom: 14px;
+}
+
+.updateSummary strong {
+  margin-left: 4px;
+}
+
+.updateActions {
+  border-top: 1px solid #e4e9f5;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.panelNote {
+  margin-top: 14px;
+}
+
+.fieldHint {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.codeGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 16px;
+}
+
+.codeBlock {
+  background: #f8faff;
+  border: 1px solid #d7deee;
+  border-radius: 16px;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.codeBlock.wide {
+  grid-column: 1 / -1;
+}
+
+.codeBlock strong {
+  color: #475467;
+  font-size: 13px;
+}
+
+.codeBlock code {
+  color: #172033;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.testSummary.success {
+  background: #ecfdf3;
+  border-color: #abefc6;
+}
+
+.testSummary.error {
+  background: #fef3f2;
+  border-color: #fecdca;
+}
+
+details summary {
+  color: #3157d5;
+  cursor: pointer;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
 .cards {
   display: grid;
   gap: 14px;
@@ -460,6 +606,33 @@ textarea {
   color: #667085;
 }
 
+.quotaPill {
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 5px 9px;
+}
+
+.quotaPill.success {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.quotaPill.warning {
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.quotaPill.danger {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.quotaPill.muted {
+  background: #f2f4f7;
+  color: #667085;
+}
+
 .tokenPreview {
   color: #667085;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
@@ -475,6 +648,41 @@ textarea {
 
 .metricRow strong {
   color: #172033;
+}
+
+.logToolbar {
+  justify-content: flex-start;
+}
+
+.logList {
+  display: grid;
+  gap: 12px;
+}
+
+.logItem {
+  background: #fbfcff;
+  border: 1px solid #e4e9f5;
+  border-left: 5px solid #98a2b3;
+  border-radius: 18px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.logItem.success {
+  border-left-color: #12b76a;
+}
+
+.logItem.error {
+  border-left-color: #f79009;
+}
+
+.logHeader {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
 }
 
 .actions {
@@ -515,8 +723,13 @@ textarea {
     position: static;
   }
 
+  .navList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .statsGrid,
   .contentGrid,
+  .contentGrid.twoPanels,
   .splitPanel {
     grid-template-columns: 1fr 1fr;
   }
@@ -536,8 +749,13 @@ textarea {
   .twoColumns,
   .statsGrid,
   .contentGrid,
+  .contentGrid.twoPanels,
   .splitPanel {
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .codeGrid {
     grid-template-columns: 1fr;
   }
 
@@ -547,9 +765,13 @@ textarea {
   }
 
   .toolbar > *,
-  .actions > *,
   button {
     width: 100%;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .searchInput {

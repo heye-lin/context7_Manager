@@ -26,8 +26,18 @@ function createPoolError(message, status = 400) {
   return error;
 }
 
+function normalizeRemainingQuota(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const quota = Number(value);
+  if (!Number.isFinite(quota) || quota < 0) {
+    throw createPoolError('Remaining quota must be a non-negative number');
+  }
+  return quota;
+}
+
 export function createAccountPool(initialAccounts = []) {
   const accounts = new Map();
+  const auditEvents = [];
 
   function getRequiredAccount(id) {
     const account = accounts.get(id);
@@ -60,6 +70,7 @@ export function createAccountPool(initialAccounts = []) {
       usageCount: 0,
       leasedCount: 0,
       failureCount: 0,
+      remainingQuota: normalizeRemainingQuota(input.remainingQuota),
       lastUsedAt: null,
       lastError: null,
       createdAt: now(),
@@ -86,6 +97,9 @@ export function createAccountPool(initialAccounts = []) {
     if (typeof changes.enabled === 'boolean') {
       account.enabled = changes.enabled;
     }
+    if ('remainingQuota' in changes) {
+      account.remainingQuota = normalizeRemainingQuota(changes.remainingQuota);
+    }
     account.updatedAt = now();
 
     return toPublicAccount(account);
@@ -96,7 +110,24 @@ export function createAccountPool(initialAccounts = []) {
     accounts.delete(id);
   }
 
-  function leaseAccount() {
+  function leaseAccount(id) {
+    if (id) {
+      const selected = getRequiredAccount(id);
+      if (!selected.enabled) {
+        throw createPoolError('Selected Context7 account is disabled', 503);
+      }
+      selected.leasedCount += 1;
+      selected.updatedAt = now();
+      return {
+        leaseId: randomUUID(),
+        account: {
+          id: selected.id,
+          name: selected.name,
+          token: selected.token,
+        },
+      };
+    }
+
     const availableAccounts = [...accounts.values()]
       .filter((account) => account.enabled)
       .sort((left, right) => {
@@ -139,8 +170,35 @@ export function createAccountPool(initialAccounts = []) {
     } else {
       account.lastError = null;
     }
+    if ('remainingQuota' in result && result.remainingQuota !== undefined) {
+      account.remainingQuota = normalizeRemainingQuota(result.remainingQuota);
+    }
 
     return toPublicAccount(account);
+  }
+
+  function recordAudit(event = {}) {
+    const { token, tokenCiphertext, ...safeEvent } = event;
+    auditEvents.push({
+      id: randomUUID(),
+      createdAt: now(),
+      type: safeEvent.type || (safeEvent.method === 'MCP' ? 'mcp' : 'gateway'),
+      ...safeEvent,
+    });
+    if (auditEvents.length > 1000) {
+      auditEvents.splice(0, auditEvents.length - 1000);
+    }
+  }
+
+  function listAudit(query = {}) {
+    const limit = Math.min(Math.max(Number(query.limit) || 100, 1), 500);
+    return auditEvents
+      .filter((event) => !query.accountId || event.accountId === query.accountId)
+      .filter((event) => query.success === undefined || event.success === query.success)
+      .filter((event) => !query.type || event.type === query.type)
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+      .slice(0, limit)
+      .map((event) => ({ ...event }));
   }
 
   for (const account of initialAccounts) {
@@ -152,7 +210,9 @@ export function createAccountPool(initialAccounts = []) {
     deleteAccount,
     getAccount,
     leaseAccount,
+    listAudit,
     listAccounts,
+    recordAudit,
     recordUsage,
     updateAccount,
   };

@@ -9,7 +9,9 @@ services:
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?set GATEWAY_TOKEN}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
       CONTEXT7_BASE_URL: ${CONTEXT7_BASE_URL:-https://context7.com}
+      CONTEXT7_MCP_URL: ${CONTEXT7_MCP_URL:-https://mcp.context7.com/mcp}
       ACCOUNT_STORE_PATH: /app/data/accounts.json
+      AUDIT_LOG_PATH: /app/data/audit-logs.json
     volumes:
       - context7-data:/app/data
     restart: unless-stopped

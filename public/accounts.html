@@ -10,36 +10,72 @@
   <body data-page="accounts">
     <main class="appShell">
       <aside class="sidebar">
-        <div class="brand"><span class="brandMark">C7</span><div><strong>Context7 Gateway</strong><small>生产号池控制台</small></div></div>
+        <div class="brand">
+          <span class="brandMark">C7</span>
+          <div>
+            <strong>Context7 Gateway</strong>
+            <small>生产号池控制台</small>
+          </div>
+        </div>
         <nav class="navList" aria-label="主导航">
           <a href="/dashboard.html" data-nav="dashboard">运行总览</a>
           <a href="/accounts.html" data-nav="accounts">账号池管理</a>
-          <a href="/gateway.html" data-nav="gateway">网关调试</a>
+          <a href="/logs.html" data-nav="logs">调用日志</a>
           <a href="/security.html" data-nav="security">安全设置</a>
         </nav>
-        <div class="sidebarCard"><span class="statusDot"></span><div><strong>账号加密存储</strong><small>列表不返回完整 Token</small></div></div>
+        <button id="logoutButton" type="button" class="logoutButton">退出登录</button>
+        <div class="sidebarCard">
+          <span class="statusDot"></span>
+          <div>
+            <strong>账号加密存储</strong>
+            <small>列表不返回完整 Token</small>
+          </div>
+        </div>
       </aside>
       <section class="workspace">
-        <header class="topbar"><div><p class="eyebrow">Pool</p><h1>账号池管理</h1><p class="subtitle">新增、启停、删除和查看 Context7 Key 的健康状态。</p></div></header>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Pool</p>
+            <h1>账号池管理</h1>
+            <p class="subtitle">新增、启停、删除和查看 Context7 Key 的健康状态。</p>
+          </div>
+        </header>
+        <section class="statsGrid" aria-label="账号池概览">
+          <article class="statCard"><span>总账号</span><strong id="totalAccounts">0</strong><small>已加入号池的 Key</small></article>
+          <article class="statCard success"><span>启用中</span><strong id="enabledAccounts">0</strong><small>可参与调度和测试</small></article>
+          <article class="statCard warning"><span>需关注</span><strong id="attentionAccounts">0</strong><small>存在失败或额度为 0</small></article>
+          <article class="statCard dark"><span>最低额度</span><strong id="lowestQuota">未知</strong><small>来自最近一次账号测试</small></article>
+        </section>
         <section class="contentGrid singleWide">
           <section class="panel">
-            <div class="panelHeader"><div><p class="sectionLabel">Create</p><h2>新增 Context7 Key</h2></div><span id="message" class="toast" role="status">等待操作</span></div>
+            <div class="panelHeader">
+              <div><p class="sectionLabel">Create</p><h2>新增 Context7 Key</h2></div>
+              <span id="message" class="toast" role="status" aria-live="polite">等待操作</span>
+            </div>
             <form id="accountForm" class="stackForm">
               <label>账号名称<input name="name" placeholder="例如：主号 / 备用号 / 团队 A" required /></label>
               <label>Context7 API Key<input name="token" type="password" placeholder="ctx7sk-..." required /></label>
               <button type="submit">加密加入号池</button>
             </form>
           </section>
+        </section>
+
+        <section class="panel resultPanel">
+          <div class="panelHeader"><div><p class="sectionLabel">Test Response</p><h2>账号测试结果</h2></div></div>
+          <div id="accountTestResult" class="testResult" aria-live="polite">暂无测试结果</div>
+        </section>
+
+        <section class="contentGrid singleWide">
           <section class="panel">
             <div class="panelHeader controlsHeader">
               <div><p class="sectionLabel">Accounts</p><h2>账号列表</h2></div>
               <div class="toolbar">
-                <input id="accountSearch" class="searchInput" placeholder="搜索账号名称或 Token 掩码" />
-                <select id="accountFilter" class="compactSelect"><option value="all">全部</option><option value="enabled">仅启用</option><option value="disabled">仅停用</option><option value="failed">有失败</option></select>
+                <input id="accountSearch" class="searchInput" aria-label="搜索账号名称或 Token 掩码" placeholder="搜索账号名称或 Token 掩码" />
+                <select id="accountFilter" class="compactSelect" aria-label="筛选账号状态"><option value="all">全部</option><option value="enabled">仅启用</option><option value="disabled">仅停用</option><option value="failed">有失败</option></select>
                 <button id="refreshButton" type="button" class="secondary">刷新</button>
               </div>
             </div>
-            <div id="accountCards" class="cards"></div>
+            <div id="accountCards" class="cards" aria-live="polite"></div>
           </section>
         </section>
       </section>

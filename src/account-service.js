@@ -26,6 +26,15 @@ function createHttpError(message, status = 400) {
   return error;
 }
 
+function normalizeRemainingQuota(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const quota = Number(value);
+  if (!Number.isFinite(quota) || quota < 0) {
+    throw createHttpError('Remaining quota must be a non-negative number');
+  }
+  return quota;
+}
+
 export function createAccountService({ repository, tokenCipher, auditLogger } = {}) {
   if (!repository) {
     throw new Error('repository is required');
@@ -63,6 +72,7 @@ export function createAccountService({ repository, tokenCipher, auditLogger } = 
       usageCount: 0,
       leasedCount: 0,
       failureCount: 0,
+      remainingQuota: normalizeRemainingQuota(input.remainingQuota),
       lastUsedAt: null,
       lastError: null,
       createdAt: now(),
@@ -90,6 +100,9 @@ export function createAccountService({ repository, tokenCipher, auditLogger } = 
     if (typeof changes.enabled === 'boolean') {
       account.enabled = changes.enabled;
     }
+    if ('remainingQuota' in changes) {
+      account.remainingQuota = normalizeRemainingQuota(changes.remainingQuota);
+    }
     account.updatedAt = now();
     await repository.updateAccount(account);
     return toPublicAccount({ ...account, token });
@@ -103,7 +116,28 @@ export function createAccountService({ repository, tokenCipher, auditLogger } = 
     await repository.deleteAccount(id);
   }
 
-  async function leaseAccount() {
+  async function leaseAccount(id) {
+    if (id) {
+      const selected = await repository.getAccount(id);
+      if (!selected) {
+        throw createHttpError('Context7 account not found', 404);
+      }
+      if (!selected.enabled) {
+        throw createHttpError('Selected Context7 account is disabled', 503);
+      }
+      selected.leasedCount += 1;
+      selected.updatedAt = now();
+      await repository.updateAccount(selected);
+      return {
+        leaseId: randomUUID(),
+        account: {
+          id: selected.id,
+          name: selected.name,
+          token: tokenCipher.decrypt(selected.tokenCiphertext),
+        },
+      };
+    }
+
     const accounts = (await repository.listAccounts())
       .filter((account) => account.enabled)
       .sort((left, right) => {
@@ -147,6 +181,9 @@ export function createAccountService({ repository, tokenCipher, auditLogger } = 
     } else {
       account.lastError = null;
     }
+    if ('remainingQuota' in result && result.remainingQuota !== undefined) {
+      account.remainingQuota = normalizeRemainingQuota(result.remainingQuota);
+    }
 
     await repository.updateAccount(account);
     return toPublicAccount({ ...account, token: tokenCipher.decrypt(account.tokenCiphertext) });
@@ -158,11 +195,19 @@ export function createAccountService({ repository, tokenCipher, auditLogger } = 
     }
   }
 
+  async function listAudit(query = {}) {
+    if (!auditLogger?.list) {
+      return [];
+    }
+    return auditLogger.list(query);
+  }
+
   return {
     addAccount,
     deleteAccount,
     getAccount,
     leaseAccount,
+    listAudit,
     listAccounts,
     recordAudit,
     recordUsage,

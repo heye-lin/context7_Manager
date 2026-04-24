@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
@@ -91,15 +92,61 @@ export function createFileAccountRepository(path) {
   };
 }
 
-export function createMemoryAuditLogger() {
+function sanitizeAuditEvent(event = {}) {
+  const { token, tokenCiphertext, ...safeEvent } = event;
+  return {
+    id: safeEvent.id || randomUUID(),
+    createdAt: safeEvent.createdAt || new Date().toISOString(),
+    type: safeEvent.type || (safeEvent.method === 'MCP' ? 'mcp' : 'gateway'),
+    ...safeEvent,
+  };
+}
+
+function filterAuditEvents(events, query = {}) {
+  const limit = Math.min(Math.max(Number(query.limit) || 100, 1), 500);
+  return events
+    .filter((event) => !query.accountId || event.accountId === query.accountId)
+    .filter((event) => query.success === undefined || event.success === query.success)
+    .filter((event) => !query.type || event.type === query.type)
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+    .slice(0, limit)
+    .map(clone);
+}
+
+export function createMemoryAuditLogger({ retention = 1000 } = {}) {
   const events = [];
 
   return {
-    async list() {
-      return events.map(clone);
+    async list(query = {}) {
+      return filterAuditEvents(events, query);
     },
     async record(event) {
-      events.push(clone(event));
+      events.push(sanitizeAuditEvent(event));
+      if (events.length > retention) {
+        events.splice(0, events.length - retention);
+      }
+    },
+  };
+}
+
+export function createFileAuditLogger(path, { retention = 2000 } = {}) {
+  async function listRawEvents() {
+    const data = await readJsonFile(path, { events: [] });
+    return Array.isArray(data.events) ? data.events : [];
+  }
+
+  async function saveRawEvents(events) {
+    await writeJsonFile(path, { events });
+  }
+
+  return {
+    async list(query = {}) {
+      return filterAuditEvents(await listRawEvents(), query);
+    },
+    async record(event) {
+      const events = await listRawEvents();
+      events.push(sanitizeAuditEvent(event));
+      await saveRawEvents(events.slice(-retention));
     },
   };
 }

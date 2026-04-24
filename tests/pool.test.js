@@ -9,9 +9,21 @@ test('adds accounts and masks secrets when listing', () => {
   const listed = pool.listAccounts();
 
   assert.equal(account.name, 'main');
+  assert.equal(account.remainingQuota, null);
   assert.equal(listed.length, 1);
+  assert.equal(listed[0].remainingQuota, null);
   assert.equal(listed[0].tokenPreview, 'ctx7...oken');
   assert.equal('token' in listed[0], false);
+});
+
+test('updates remaining quota for an account', () => {
+  const pool = createAccountPool();
+  const account = pool.addAccount({ name: 'quota', token: 'quota-token', remainingQuota: 20 });
+
+  const updated = pool.updateAccount(account.id, { remainingQuota: 12 });
+
+  assert.equal(updated.remainingQuota, 12);
+  assert.equal(pool.getAccount(account.id).remainingQuota, 12);
 });
 
 test('leases enabled healthy accounts by least usage', () => {

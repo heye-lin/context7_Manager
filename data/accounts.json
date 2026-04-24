@@ -1,30 +1,18 @@
 {
   "accounts": [
     {
-      "id": "ff81f242-d70f-4b98-a908-0cdffdf37237",
-      "name": "gateway-token-account",
-      "tokenCiphertext": "k0FCxHvDzWX3JrXZ.AQjBPP0IpoZlFZYOq6gm0Q.MJWCFe9Amv3gVVSO0C7cMy2exk4",
+      "id": "087292d4-aba4-41eb-8409-a8e2ebcfa815",
+      "name": "yysssss133@gmail.com",
+      "tokenCiphertext": "siQpkLr9nme7j13n.iUfzYg5QY6Qkd_e8f4KEAg.szAXj-NRm_6UM2Z_ajcn2dzqWmhTZ5FJJEr0aewippiGNCXDmlyRd-okfA",
       "enabled": true,
-      "usageCount": 1,
-      "leasedCount": 1,
+      "usageCount": 4,
+      "leasedCount": 4,
       "failureCount": 0,
-      "lastUsedAt": "2026-04-24T07:06:33.728Z",
+      "lastUsedAt": "2026-04-24T08:41:44.281Z",
       "lastError": null,
-      "createdAt": "2026-04-24T07:06:33.635Z",
-      "updatedAt": "2026-04-24T07:06:33.728Z"
-    },
-    {
-      "id": "d03604ae-ed8b-42da-839e-8bb7a602326a",
-      "name": "audited-account",
-      "tokenCiphertext": "_UfxQni1XbgQ2wfF.heJYx6RE9v_fqvMRu6fiWA.slwLI6mX8M-BMY_bnz0YaiOR",
-      "enabled": true,
-      "usageCount": 0,
-      "leasedCount": 0,
-      "failureCount": 0,
-      "lastUsedAt": null,
-      "lastError": null,
-      "createdAt": "2026-04-24T07:06:33.775Z",
-      "updatedAt": "2026-04-24T07:06:33.775Z"
+      "createdAt": "2026-04-24T07:44:24.538Z",
+      "updatedAt": "2026-04-24T08:41:44.281Z",
+      "remainingQuota": 993
     }
   ]
 }

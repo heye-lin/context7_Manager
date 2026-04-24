@@ -27,7 +27,7 @@ async function withUpstream(run) {
       method: request.method,
       url: request.url,
     });
-    response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+    response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'ratelimit-remaining': '42' });
     response.end(JSON.stringify({ ok: true }));
   }));
 
@@ -46,7 +46,7 @@ test('account API adds lists and leases accounts', async () => {
     const created = await fetch(`${baseUrl}/api/accounts`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'api-account', token: 'api-secret-token' }),
+        body: JSON.stringify({ name: 'api-account', token: 'api-secret-token' }),
     });
     const createdBody = await created.json();
 
@@ -57,8 +57,10 @@ test('account API adds lists and leases accounts', async () => {
     const leasedBody = await leased.json();
 
     assert.equal(created.status, 201);
+    assert.equal(createdBody.account.remainingQuota, null);
     assert.equal(createdBody.account.tokenPreview, 'api-...oken');
     assert.equal(listedBody.accounts.length, 1);
+    assert.equal(listedBody.accounts[0].remainingQuota, null);
     assert.equal(leased.status, 201);
     assert.equal(leasedBody.account.token, 'api-secret-token');
   });
@@ -97,6 +99,31 @@ test('gateway proxies requests with a pooled Context7 token and records success'
       assert.equal(accounts.accounts[0].usageCount, 1);
       assert.equal(accounts.accounts[0].leasedCount, 1);
       assert.equal(accounts.accounts[0].failureCount, 0);
+    }, { upstreamBaseUrl });
+  });
+});
+
+test('account test proxies a request through the selected account and shows quota', async () => {
+  await withUpstream(async (upstreamBaseUrl, upstreamRequests) => {
+    await withServer(async (baseUrl) => {
+      const created = await fetch(`${baseUrl}/api/accounts`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'single-test-account', token: 'ctx7sk-single-token' }),
+      }).then((response) => response.json());
+
+      const tested = await fetch(`${baseUrl}/api/accounts/${created.account.id}/test`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ path: '/api/v2/libs/search?query=react' }),
+      });
+      const testedBody = await tested.json();
+
+      assert.equal(tested.status, 200);
+      assert.equal(testedBody.account.id, created.account.id);
+      assert.equal(testedBody.account.remainingQuota, 42);
+      assert.equal(testedBody.upstream.ok, true);
+      assert.equal(upstreamRequests[0].authorization, 'Bearer ctx7sk-single-token');
     }, { upstreamBaseUrl });
   });
 });

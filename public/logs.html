@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>调用日志 - Context7 号池网关</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="logs">
+    <main class="appShell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brandMark">C7</span>
+          <div>
+            <strong>Context7 Gateway</strong>
+            <small>生产号池控制台</small>
+          </div>
+        </div>
+        <nav class="navList" aria-label="主导航">
+          <a href="/dashboard.html" data-nav="dashboard">运行总览</a>
+          <a href="/accounts.html" data-nav="accounts">账号池管理</a>
+          <a href="/logs.html" data-nav="logs">调用日志</a>
+          <a href="/security.html" data-nav="security">安全设置</a>
+        </nav>
+        <button id="logoutButton" type="button" class="logoutButton">退出登录</button>
+        <div class="sidebarCard">
+          <span class="statusDot"></span>
+          <div>
+            <strong>日志已脱敏</strong>
+            <small>不保存 Context7 Key 明文</small>
+          </div>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Audit Logs</p>
+            <h1>调用日志</h1>
+            <p class="subtitle">查看登录会话、网关转发、MCP、账号管理、账号测试、配置变更、版本更新和系统错误，方便排查生产问题。</p>
+          </div>
+          <button id="refreshLogsButton" type="button" class="ghostButton">刷新日志</button>
+        </header>
+
+        <section class="panel">
+          <div class="panelHeader controlsHeader">
+            <div>
+              <p class="sectionLabel">Filters</p>
+              <h2>筛选条件</h2>
+            </div>
+            <span id="message" class="toast" role="status" aria-live="polite">等待操作</span>
+          </div>
+          <div class="toolbar logToolbar">
+            <select id="logTypeFilter" class="compactSelect" aria-label="日志类型">
+              <option value="">全部类型</option>
+              <option value="gateway">网关 API</option>
+              <option value="mcp">MCP</option>
+              <option value="auth">登录会话</option>
+              <option value="account">账号管理</option>
+              <option value="account-test">账号测试</option>
+              <option value="settings">配置变更</option>
+              <option value="lease">租号自检</option>
+              <option value="update">版本更新</option>
+              <option value="error">系统错误</option>
+            </select>
+            <select id="logStatusFilter" class="compactSelect" aria-label="调用状态">
+              <option value="">全部状态</option>
+              <option value="true">成功</option>
+              <option value="false">失败</option>
+            </select>
+            <input id="logAccountFilter" class="searchInput" type="search" placeholder="按账号 ID 精确筛选" aria-label="账号 ID" />
+            <select id="logLimit" class="compactSelect" aria-label="日志数量">
+              <option value="50">最近 50 条</option>
+              <option value="100" selected>最近 100 条</option>
+              <option value="200">最近 200 条</option>
+              <option value="500">最近 500 条</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panelHeader">
+            <div>
+              <p class="sectionLabel">Records</p>
+              <h2>日志列表</h2>
+            </div>
+            <span class="toast" id="logCount">0 条</span>
+          </div>
+          <div id="logList" class="logList" aria-live="polite"></div>
+        </section>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

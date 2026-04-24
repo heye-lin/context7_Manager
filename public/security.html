@@ -10,42 +10,165 @@
   <body data-page="security">
     <main class="appShell">
       <aside class="sidebar">
-        <div class="brand"><span class="brandMark">C7</span><div><strong>Context7 Gateway</strong><small>个人号池控制台</small></div></div>
-        <nav class="navList" aria-label="主导航"><a href="/dashboard.html" data-nav="dashboard">运行总览</a><a href="/accounts.html" data-nav="accounts">账号池管理</a><a href="/gateway.html" data-nav="gateway">网关调试</a><a href="/security.html" data-nav="security">安全设置</a></nav>
-        <div class="sidebarCard"><span class="statusDot"></span><div><strong>个人账户模式</strong><small>无租户隔离，专注单人使用</small></div></div>
+        <div class="brand">
+          <span class="brandMark">C7</span>
+          <div>
+            <strong>Context7 Gateway</strong>
+            <small>号池控制台</small>
+          </div>
+        </div>
+        <nav class="navList" aria-label="主导航">
+          <a href="/dashboard.html" data-nav="dashboard">运行总览</a>
+          <a href="/accounts.html" data-nav="accounts">账号池管理</a>
+          <a href="/logs.html" data-nav="logs">调用日志</a>
+          <a href="/security.html" data-nav="security">安全设置</a>
+        </nav>
+        <button id="logoutButton" type="button" class="logoutButton">退出登录</button>
+        <div class="sidebarCard">
+          <span class="statusDot"></span>
+          <div>
+            <strong>双令牌访问控制</strong>
+            <small>控制台与网关调用分开授权</small>
+          </div>
+        </div>
       </aside>
-      <section class="workspace">
-        <header class="topbar"><div><p class="eyebrow">Personal Settings</p><h1>安全设置</h1><p class="subtitle">可视化管理 .env 配置：管理令牌、网关令牌、加密密钥、上游地址和存储路径。</p></div></header>
 
-        <section class="statsGrid settingsSummary" aria-label="配置状态">
-          <article class="statCard"><span>模式</span><strong id="settingMode">个人</strong><small>不启用租户隔离</small></article>
-          <article class="statCard success"><span>Admin Token</span><strong id="adminTokenStatus">-</strong><small id="adminTokenPreview">未加载</small></article>
-          <article class="statCard success"><span>Gateway Token</span><strong id="gatewayTokenStatus">-</strong><small id="gatewayTokenPreview">未加载</small></article>
-          <article class="statCard dark"><span>加密密钥</span><strong id="encryptionKeyStatus">-</strong><small>用于加密 Context7 Key</small></article>
+      <section class="workspace securityWorkspace">
+        <header class="topbar securityHero">
+          <div>
+            <p class="eyebrow">Security</p>
+            <h1>安全设置</h1>
+            <p class="subtitle">集中管理服务端配置、版本更新和 MCP 网关接入方式。</p>
+          </div>
+          <div class="topbarActions">
+            <button id="reloadSettingsButton" type="button" class="ghostButton">重新读取 .env</button>
+          </div>
+        </header>
+
+        <section class="panel">
+          <div class="panelHeader">
+            <div>
+              <p class="sectionLabel">Server Environment</p>
+              <h2>服务端配置状态</h2>
+            </div>
+            <span id="message" class="toast" role="status" aria-live="polite">等待操作</span>
+          </div>
+          <div class="statsGrid" aria-label="服务端配置状态">
+            <article class="statCard">
+              <span>运行模式</span>
+              <strong id="settingMode">-</strong>
+              <small>个人账号使用，无租户隔离</small>
+            </article>
+            <article class="statCard success">
+              <span>ADMIN_TOKEN</span>
+              <strong id="adminTokenStatus">-</strong>
+              <small id="adminTokenPreview">-</small>
+            </article>
+            <article class="statCard warning">
+              <span>GATEWAY_TOKEN</span>
+              <strong id="gatewayTokenStatus">-</strong>
+              <small id="gatewayTokenPreview">-</small>
+            </article>
+            <article class="statCard dark">
+              <span>ENCRYPTION_KEY</span>
+              <strong id="encryptionKeyStatus">-</strong>
+              <small>加密本地保存的 Context7 Key</small>
+            </article>
+          </div>
+        </section>
+
+        <section class="contentGrid twoPanels">
+          <section class="panel">
+            <div class="panelHeader compactHeader">
+              <div>
+                <p class="sectionLabel">System Update</p>
+                <h2>版本更新</h2>
+              </div>
+            </div>
+            <div id="updateStatusPanel" class="testSummary updateSummary" aria-live="polite">
+              <span>当前版本 <strong id="currentVersion">-</strong></span>
+              <span>最新版本 <strong id="latestVersion">-</strong></span>
+              <span>构建类型 <strong id="buildType">-</strong></span>
+              <span>状态 <strong id="updateState">-</strong></span>
+            </div>
+            <div class="buttonGroup updateActions">
+              <button id="performUpdateButton" type="button">检查并更新</button>
+            </div>
+            <pre id="updateResult" class="result compactResult" hidden></pre>
+            <p class="muted panelNote">单按钮流程：先检查 GitHub Release；有新版本时再执行更新操作。源码部署不会直接执行 git pull。</p>
+          </section>
+
+          <section class="panel">
+            <div class="panelHeader compactHeader">
+              <div>
+                <p class="sectionLabel">MCP Access</p>
+                <h2>MCP 网关接入</h2>
+              </div>
+            </div>
+            <p class="muted">MCP 客户端只连接你的网关地址，不要在客户端暴露 Context7 Key。</p>
+            <div class="codeGrid">
+              <div class="codeBlock">
+                <strong>本地地址</strong>
+                <code>http://localhost:3000/mcp</code>
+              </div>
+              <div class="codeBlock">
+                <strong>生产地址</strong>
+                <code>https://your-domain.com/mcp</code>
+              </div>
+              <div class="codeBlock wide">
+                <strong>请求头</strong>
+                <code>Authorization: Bearer &lt;GATEWAY_TOKEN&gt;</code>
+              </div>
+            </div>
+          </section>
         </section>
 
         <section class="panel">
-          <div class="panelHeader"><div><p class="sectionLabel">Visual Config</p><h2>.env 可视化配置</h2></div><span id="message" class="toast" role="status">等待操作</span></div>
-          <form id="settingsForm" class="settingsForm">
-            <label>Admin Token<input id="settingsAdminToken" name="adminToken" type="password" placeholder="留空则不修改" autocomplete="off" /></label>
-            <label>Gateway Token<input id="settingsGatewayToken" name="gatewayToken" type="password" placeholder="留空则不修改" autocomplete="off" /></label>
-            <label>Encryption Key<input id="settingsEncryptionKey" name="encryptionKey" type="password" placeholder="留空则不修改" autocomplete="off" /></label>
-            <label>Context7 Base URL<input id="settingsContext7BaseUrl" name="context7BaseUrl" placeholder="https://context7.com" /></label>
-            <label>账号存储路径<input id="settingsAccountStorePath" name="accountStorePath" placeholder="data/accounts.json" /></label>
-            <div class="buttonGroup"><button type="submit">保存到 .env</button><button id="reloadSettingsButton" type="button" class="secondary">重新加载</button></div>
+          <div class="panelHeader">
+            <div>
+              <p class="sectionLabel">Write To .env</p>
+              <h2>修改服务端配置</h2>
+            </div>
+          </div>
+          <form id="settingsForm" class="settingsForm securityForm">
+            <label>
+              Admin Token（控制台登录）
+              <input id="settingsAdminToken" name="adminToken" type="password" placeholder="留空表示不修改 ADMIN_TOKEN" autocomplete="new-password" />
+              <span class="fieldHint">用于访问后台页面和管理 API。</span>
+            </label>
+            <label>
+              Gateway Token（网关调用）
+              <input id="settingsGatewayToken" name="gatewayToken" type="password" placeholder="留空表示不修改 GATEWAY_TOKEN" autocomplete="new-password" />
+              <span class="fieldHint">用于访问 /api/gateway 和 /mcp。</span>
+            </label>
+            <label>
+              Encryption Key（加密密钥）
+              <input id="settingsEncryptionKey" name="encryptionKey" type="password" placeholder="留空表示不修改 ENCRYPTION_KEY" autocomplete="new-password" />
+              <span class="fieldHint">更换后旧账号数据可能无法解密，请先备份。</span>
+            </label>
+            <label>
+              Context7 Base URL
+              <input id="settingsContext7BaseUrl" name="context7BaseUrl" type="url" placeholder="https://context7.com" />
+              <span class="fieldHint">REST 网关上游地址。</span>
+            </label>
+            <label>
+              Account Store Path
+              <input id="settingsAccountStorePath" name="accountStorePath" type="text" placeholder="data/accounts.json" />
+              <span class="fieldHint">加密账号数据保存路径。</span>
+            </label>
+            <label>
+              Audit Log Path
+              <input id="settingsAuditLogPath" name="auditLogPath" type="text" placeholder="data/audit-logs.json" />
+              <span class="fieldHint">调用日志保存路径。</span>
+            </label>
+            <div class="buttonGroup formActions">
+              <button type="submit">保存到 .env 并同步生效</button>
+            </div>
           </form>
-        </section>
-
-        <section class="panel splitPanel">
-          <div><p class="sectionLabel">Browser Tokens</p><h2>当前浏览器令牌</h2><p class="muted">这里仅保存浏览器本地 token，用于访问控制台和网关调试；上方表单会修改服务端 .env。</p></div>
-          <form id="authForm" class="inlineForm"><label>Admin Token<input id="adminToken" name="adminToken" type="password" placeholder="输入 ADMIN_TOKEN" autocomplete="off" /></label><div class="buttonGroup"><button type="submit">更新浏览器</button><button id="logoutButton" type="button" class="secondary">退出</button></div></form>
-        </section>
-        <section class="panel splitPanel">
-          <div><p class="sectionLabel">Gateway Access</p><h2>浏览器网关令牌</h2><p class="muted">用于当前浏览器访问 `/api/gateway`。</p></div>
-          <form id="gatewayAuthForm" class="inlineForm"><label>Gateway Token<input id="gatewayToken" name="gatewayToken" type="password" placeholder="输入 GATEWAY_TOKEN" autocomplete="off" /></label><button type="submit">保存到浏览器</button></form>
+          <p class="muted panelNote">这里修改的是服务端配置文件；敏感字段留空表示不修改。</p>
         </section>
       </section>
     </main>
-    <script src="/app.js" type="module"></script>
+    <script src="/app.js?v=security-page-v2" type="module"></script>
   </body>
 </html>

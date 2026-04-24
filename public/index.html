@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>访问控制台 - Context7 号池网关</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=login-spacing-v2" />
   </head>
   <body data-page="login">
     <section id="loginScreen" class="loginScreen">
@@ -14,13 +14,13 @@
         <p class="eyebrow">Admin Console</p>
         <h1>访问控制台</h1>
         <p class="muted">请输入服务端配置的 ADMIN_TOKEN。未验证前不会加载任何管理数据。</p>
-        <form id="loginForm" class="stackForm">
+        <form id="loginForm" class="stackForm loginForm">
           <label>
             Admin Token
             <input id="loginAdminToken" type="password" placeholder="输入 ADMIN_TOKEN" autocomplete="off" required />
           </label>
+          <button id="loginButton" type="submit">进入控制台</button>
         </form>
-        <button id="loginButton" type="button">进入控制台</button>
         <p id="loginMessage" class="loginMessage" role="status"></p>
       </div>
     </section>

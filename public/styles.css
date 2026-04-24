@@ -115,6 +115,15 @@ button.danger {
   margin-bottom: 24px;
 }
 
+.loginCard .loginForm {
+  gap: 22px;
+}
+
+.loginCard #loginButton {
+  justify-self: start;
+  min-width: 112px;
+}
+
 .loginMessage {
   color: #b42318;
   font-weight: 800;

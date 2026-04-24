@@ -35,6 +35,10 @@ test('serves console pages without a standalone gateway page', async () => {
       assert.equal(response.status, 200, path);
       assert.match(html, new RegExp(expectedText), path);
       assert.match(html, /data-page=/, path);
+      if (path === '/') {
+        assert.match(html, /styles\.css\?v=login-spacing-v2/);
+        assert.match(html, /<form id="loginForm" class="stackForm loginForm">[\s\S]*id="loginButton"/);
+      }
       if (path !== '/') assert.match(html, /id="logoutButton"/, path);
       assert.doesNotMatch(html, /href="\/gateway\.html"/, path);
     }

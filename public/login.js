@@ -56,8 +56,3 @@ form.addEventListener('submit', (event) => {
     message.textContent = error.message;
   });
 });
-button.addEventListener('click', () => {
-  login().catch((error) => {
-    message.textContent = error.message;
-  });
-});

@@ -42,7 +42,8 @@ jobs:
       - name: Read package version
         id: package
         shell: bash
-        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          node -e "const fs=require('fs'); const pkg=require('./package.json'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + pkg.version + '\n');"
 
       - name: Build and push
         uses: docker/build-push-action@v6

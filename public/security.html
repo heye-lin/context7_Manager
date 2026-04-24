@@ -94,8 +94,12 @@
             <div class="buttonGroup updateActions">
               <button id="performUpdateButton" type="button">检查并更新</button>
             </div>
+            <div id="updateCommandBox" class="commandBox" hidden>
+              <strong>远程更新命令</strong>
+              <pre id="updateCommands" class="result compactResult"></pre>
+            </div>
             <pre id="updateResult" class="result compactResult" hidden></pre>
-            <p class="muted panelNote">单按钮流程：先检查 GitHub Release；有新版本时再执行更新操作。源码部署不会直接执行 git pull。</p>
+            <p class="muted panelNote">单按钮流程：先检查 GitHub Release；没有 Release 时回退检查 main 最新提交。生产建议使用 `docker-compose.prod.yml` 拉取 GHCR `latest` 镜像完成更新。</p>
           </section>
 
           <section class="panel">

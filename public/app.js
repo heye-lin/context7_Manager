@@ -41,6 +41,8 @@ const elements = {
   totalAccounts: document.querySelector('#totalAccounts'),
   totalFailures: document.querySelector('#totalFailures'),
   totalUsage: document.querySelector('#totalUsage'),
+  updateCommandBox: document.querySelector('#updateCommandBox'),
+  updateCommands: document.querySelector('#updateCommands'),
   updateResult: document.querySelector('#updateResult'),
   updateState: document.querySelector('#updateState'),
 };
@@ -371,6 +373,11 @@ function renderUpdateInfo(info, { showDetails = false } = {}) {
   elements.latestVersion.textContent = info.latest_version || info.version || '-';
   elements.buildType.textContent = info.build_type || 'source';
   elements.updateState.textContent = info.warning ? '检查失败' : (info.has_update ? '有新版本' : '已是最新');
+  if (elements.updateCommandBox && elements.updateCommands) {
+    const commands = info.update_commands?.docker_compose_latest || info.update_commands?.source_deploy || [];
+    elements.updateCommandBox.hidden = !commands.length;
+    elements.updateCommands.textContent = commands.join('\n');
+  }
   if (elements.updateResult) {
     elements.updateResult.hidden = !showDetails;
     elements.updateResult.textContent = showDetails ? JSON.stringify(info, null, 2) : '';

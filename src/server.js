@@ -595,8 +595,10 @@ export function createServer(options = {}) {
     envConfig,
     gatewayToken: options.gatewayToken,
     updateService: options.updateService || createUpdateService({
-      buildType: options.buildType || 'source',
+      buildType: options.buildType || process.env.BUILD_TYPE || 'source',
+      currentCommit: options.currentCommit || process.env.APP_COMMIT,
       currentVersion: options.currentVersion,
+      dockerImage: options.dockerImage || process.env.DOCKER_IMAGE,
       repository: options.updateRepository,
       rootDir,
     }),

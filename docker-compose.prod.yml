@@ -1,11 +1,12 @@
 services:
   context7-gateway:
-    build: .
+    image: ${DOCKER_IMAGE:-ghcr.io/heye-lin/context7_manager:latest}
+    pull_policy: always
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     environment:
       PORT: "3000"
-      BUILD_TYPE: ${BUILD_TYPE:-source}
+      BUILD_TYPE: docker
       DOCKER_IMAGE: ${DOCKER_IMAGE:-ghcr.io/heye-lin/context7_manager:latest}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN}
       GATEWAY_TOKEN: ${GATEWAY_TOKEN:?set GATEWAY_TOKEN}

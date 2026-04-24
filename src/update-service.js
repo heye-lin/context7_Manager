@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 const defaultRepository = 'heye-lin/context7_Manager';
 const cacheTtlMs = 20 * 60 * 1000;
+const defaultDockerImage = 'ghcr.io/heye-lin/context7_manager:latest';
 
 function normalizeVersion(version = '') {
   return String(version).trim().replace(/^v/i, '') || '0.0.0';
@@ -24,14 +25,40 @@ async function readPackageVersion(rootDir) {
   return JSON.parse(content).version || '0.0.0';
 }
 
-function releaseToInfo(release, currentVersion, buildType) {
+function shortCommit(commit = '') {
+  const value = String(commit || '').trim();
+  return value && value !== 'unknown' ? value.slice(0, 12) : '';
+}
+
+function updateCommands(dockerImage) {
+  return {
+    docker_compose_latest: [
+      'docker compose pull',
+      'docker compose up -d',
+    ],
+    docker_run_latest: [
+      `docker pull ${dockerImage}`,
+      'docker rm -f context7-manager',
+      `docker run -d --name context7-manager --restart unless-stopped --env-file .env -p 3000:3000 -v context7-data:/app/data ${dockerImage}`,
+    ],
+    source_deploy: [
+      'git pull',
+      'docker compose up -d --build',
+    ],
+  };
+}
+
+function releaseToInfo(release, currentVersion, buildType, context = {}) {
   const latestVersion = normalizeVersion(release.tag_name || release.name);
   return {
     build_type: buildType,
     cached: false,
+    current_commit: shortCommit(context.currentCommit),
     current_version: normalizeVersion(currentVersion),
     has_update: compareVersions(currentVersion, latestVersion) < 0,
     latest_version: latestVersion,
+    update_mode: 'release',
+    update_commands: updateCommands(context.dockerImage || defaultDockerImage),
     release_info: release.tag_name ? {
       assets: Array.isArray(release.assets) ? release.assets.map((asset) => ({
         download_url: asset.browser_download_url,
@@ -46,9 +73,33 @@ function releaseToInfo(release, currentVersion, buildType) {
   };
 }
 
+function commitToInfo(commit, currentVersion, buildType, context = {}) {
+  const latestCommit = shortCommit(commit.sha);
+  const currentCommit = shortCommit(context.currentCommit);
+  return {
+    build_type: buildType,
+    cached: false,
+    current_commit: currentCommit,
+    current_version: normalizeVersion(currentVersion),
+    has_update: Boolean(latestCommit && currentCommit && latestCommit !== currentCommit),
+    latest_commit: latestCommit,
+    latest_version: latestCommit || normalizeVersion(currentVersion),
+    update_mode: 'latest-image',
+    update_commands: updateCommands(context.dockerImage || defaultDockerImage),
+    commit_info: commit.sha ? {
+      html_url: commit.html_url || '',
+      message: commit.commit?.message || '',
+      pushed_at: commit.commit?.committer?.date || commit.commit?.author?.date || '',
+    } : undefined,
+    warning: currentCommit ? undefined : 'Current container was not built with APP_COMMIT, cannot compare latest image commit accurately.',
+  };
+}
+
 export function createUpdateService({
   buildType = 'source',
+  currentCommit = process.env.APP_COMMIT,
   currentVersion,
+  dockerImage = process.env.DOCKER_IMAGE || defaultDockerImage,
   repository = defaultRepository,
   rootDir = process.cwd(),
 } = {}) {
@@ -59,6 +110,26 @@ export function createUpdateService({
     return normalizeVersion(currentVersion || await readPackageVersion(rootDir));
   }
 
+  async function fetchLatestRelease(activeVersion) {
+    const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`, {
+      headers: { accept: 'application/vnd.github+json', 'user-agent': 'context7-manager-update-checker' },
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub releases returned ${response.status}`);
+    }
+    return releaseToInfo(await response.json(), activeVersion, buildType, { currentCommit, dockerImage });
+  }
+
+  async function fetchLatestCommit(activeVersion) {
+    const response = await fetch(`https://api.github.com/repos/${repository}/commits/main`, {
+      headers: { accept: 'application/vnd.github+json', 'user-agent': 'context7-manager-update-checker' },
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub commits returned ${response.status}`);
+    }
+    return commitToInfo(await response.json(), activeVersion, buildType, { currentCommit, dockerImage });
+  }
+
   async function check({ force = false } = {}) {
     const cached = cache && Date.now() - cacheTime < cacheTtlMs;
     if (!force && cached) {
@@ -67,13 +138,12 @@ export function createUpdateService({
 
     const activeVersion = await version();
     try {
-      const response = await fetch(`https://api.github.com/repos/${repository}/releases/latest`, {
-        headers: { accept: 'application/vnd.github+json', 'user-agent': 'context7-manager-update-checker' },
-      });
-      if (!response.ok) {
-        throw new Error(`GitHub releases returned ${response.status}`);
+      try {
+        cache = await fetchLatestRelease(activeVersion);
+      } catch (releaseError) {
+        cache = await fetchLatestCommit(activeVersion);
+        cache.warning = `No GitHub Release found, using latest main commit: ${releaseError.message}`;
       }
-      cache = releaseToInfo(await response.json(), activeVersion, buildType);
       cacheTime = Date.now();
       return cache;
     } catch (error) {
@@ -83,9 +153,11 @@ export function createUpdateService({
       return {
         build_type: buildType,
         cached: false,
+        current_commit: shortCommit(currentCommit),
         current_version: activeVersion,
         has_update: false,
         latest_version: activeVersion,
+        update_commands: updateCommands(dockerImage),
         warning: error.message,
       };
     }
@@ -101,11 +173,16 @@ export function createUpdateService({
 
     return {
       build_type: buildType,
-      message: buildType === 'release'
-        ? 'Update package is available. Download and replace through your deployment pipeline.'
-        : 'Source deployment cannot be replaced safely online. Please update through CI/CD, release package, or manual deployment.',
-      need_restart: false,
+      current_commit: info.current_commit,
+      latest_commit: info.latest_commit,
+      message: buildType === 'docker'
+        ? `Update available. Pull latest image ${dockerImage} and recreate the container.`
+        : 'Update available. Use the commands returned by update_commands for your deployment mode.',
+      need_restart: true,
       release_info: info.release_info,
+      commit_info: info.commit_info,
+      update_commands: info.update_commands || updateCommands(dockerImage),
+      update_mode: info.update_mode,
     };
   }
 

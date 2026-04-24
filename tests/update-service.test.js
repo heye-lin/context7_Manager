@@ -39,7 +39,7 @@ test('system update APIs require admin auth and expose version workflow', async 
     },
     async performUpdate() {
       calls.push('update');
-      return { message: 'Use release package', need_restart: false };
+      return { message: 'Use latest image', need_restart: true };
     },
   };
 
@@ -58,20 +58,68 @@ test('system update APIs require admin auth and expose version workflow', async 
     const updated = await fetch(`${baseUrl}/api/system/update`, { method: 'POST', headers: adminHeaders() });
     const updatedBody = await updated.json();
     assert.equal(updated.status, 200);
-    assert.equal(updatedBody.need_restart, false);
+    assert.equal(updatedBody.need_restart, true);
     assert.deepEqual(calls, ['version', 'check-force', 'update']);
   });
 });
 
 test('update service returns cached-style warning when GitHub release check fails', async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({ ok: false, status: 404 });
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    calls.push(url);
+    return { ok: false, status: 404 };
+  };
   try {
     const service = createUpdateService({ currentVersion: '0.1.0', repository: 'owner/repo' });
     const info = await service.check({ force: true });
     assert.equal(info.current_version, '0.1.0');
     assert.equal(info.has_update, false);
-    assert.match(info.warning, /GitHub releases returned 404/);
+    assert.match(info.warning, /GitHub commits returned 404/);
+    assert.equal(calls.length, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('update service falls back to latest main commit when release is missing', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url) => {
+    calls.push(url);
+    if (String(url).includes('/releases/latest')) {
+      return { ok: false, status: 404 };
+    }
+    return {
+      ok: true,
+      async json() {
+        return {
+          sha: 'abcdef1234567890',
+          html_url: 'https://github.com/owner/repo/commit/abcdef1234567890',
+          commit: { message: 'update latest image', committer: { date: '2026-04-24T00:00:00Z' } },
+        };
+      },
+    };
+  };
+  try {
+    const service = createUpdateService({
+      buildType: 'docker',
+      currentCommit: '1111111111111111',
+      currentVersion: '0.1.0',
+      dockerImage: 'ghcr.io/owner/context7_manager:latest',
+      repository: 'owner/repo',
+    });
+    const info = await service.check({ force: true });
+    const updated = await service.performUpdate();
+
+    assert.equal(info.has_update, true);
+    assert.equal(info.update_mode, 'latest-image');
+    assert.equal(info.latest_commit, 'abcdef123456');
+    assert.match(info.warning, /No GitHub Release found/);
+    assert.deepEqual(info.update_commands.docker_compose_latest, ['docker compose pull', 'docker compose up -d']);
+    assert.equal(updated.need_restart, true);
+    assert.match(updated.message, /Pull latest image/);
+    assert.equal(calls.filter((url) => String(url).includes('/commits/main')).length, 2);
   } finally {
     globalThis.fetch = originalFetch;
   }

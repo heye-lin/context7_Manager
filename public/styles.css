@@ -478,6 +478,20 @@ textarea {
   max-height: 260px;
 }
 
+.commandBox {
+  background: #f8fbff;
+  border: 1px solid #dbe5ff;
+  border-radius: 16px;
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.commandBox > strong {
+  color: #172033;
+  display: block;
+  margin-bottom: 8px;
+}
+
 .testResult {
   display: grid;
   gap: 14px;

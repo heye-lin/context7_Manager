@@ -1,0 +1,12 @@
+- generic [ref=e3]:
+  - generic [ref=e4]: C7
+  - paragraph [ref=e5]: Admin Console
+  - heading "访问控制台" [level=1] [ref=e6]
+  - paragraph [ref=e7]: 请输入服务端配置的 ADMIN_TOKEN。未验证前不会加载任何管理数据。
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - text: Admin Token
+      - textbox "Admin Token" [ref=e10]:
+        - /placeholder: 输入 ADMIN_TOKEN
+    - button "进入控制台" [ref=e11] [cursor=pointer]
+  - status [ref=e12]

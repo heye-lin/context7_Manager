@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>安全设置 - Context7 号池网关</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="security">
+    <main class="appShell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brandMark">C7</span><div><strong>Context7 Gateway</strong><small>个人号池控制台</small></div></div>
+        <nav class="navList" aria-label="主导航"><a href="/dashboard.html" data-nav="dashboard">运行总览</a><a href="/accounts.html" data-nav="accounts">账号池管理</a><a href="/gateway.html" data-nav="gateway">网关调试</a><a href="/security.html" data-nav="security">安全设置</a></nav>
+        <div class="sidebarCard"><span class="statusDot"></span><div><strong>个人账户模式</strong><small>无租户隔离，专注单人使用</small></div></div>
+      </aside>
+      <section class="workspace">
+        <header class="topbar"><div><p class="eyebrow">Personal Settings</p><h1>安全设置</h1><p class="subtitle">可视化管理 .env 配置：管理令牌、网关令牌、加密密钥、上游地址和存储路径。</p></div></header>
+
+        <section class="statsGrid settingsSummary" aria-label="配置状态">
+          <article class="statCard"><span>模式</span><strong id="settingMode">个人</strong><small>不启用租户隔离</small></article>
+          <article class="statCard success"><span>Admin Token</span><strong id="adminTokenStatus">-</strong><small id="adminTokenPreview">未加载</small></article>
+          <article class="statCard success"><span>Gateway Token</span><strong id="gatewayTokenStatus">-</strong><small id="gatewayTokenPreview">未加载</small></article>
+          <article class="statCard dark"><span>加密密钥</span><strong id="encryptionKeyStatus">-</strong><small>用于加密 Context7 Key</small></article>
+        </section>
+
+        <section class="panel">
+          <div class="panelHeader"><div><p class="sectionLabel">Visual Config</p><h2>.env 可视化配置</h2></div><span id="message" class="toast" role="status">等待操作</span></div>
+          <form id="settingsForm" class="settingsForm">
+            <label>Admin Token<input id="settingsAdminToken" name="adminToken" type="password" placeholder="留空则不修改" autocomplete="off" /></label>
+            <label>Gateway Token<input id="settingsGatewayToken" name="gatewayToken" type="password" placeholder="留空则不修改" autocomplete="off" /></label>
+            <label>Encryption Key<input id="settingsEncryptionKey" name="encryptionKey" type="password" placeholder="留空则不修改" autocomplete="off" /></label>
+            <label>Context7 Base URL<input id="settingsContext7BaseUrl" name="context7BaseUrl" placeholder="https://context7.com" /></label>
+            <label>账号存储路径<input id="settingsAccountStorePath" name="accountStorePath" placeholder="data/accounts.json" /></label>
+            <div class="buttonGroup"><button type="submit">保存到 .env</button><button id="reloadSettingsButton" type="button" class="secondary">重新加载</button></div>
+          </form>
+        </section>
+
+        <section class="panel splitPanel">
+          <div><p class="sectionLabel">Browser Tokens</p><h2>当前浏览器令牌</h2><p class="muted">这里仅保存浏览器本地 token，用于访问控制台和网关调试；上方表单会修改服务端 .env。</p></div>
+          <form id="authForm" class="inlineForm"><label>Admin Token<input id="adminToken" name="adminToken" type="password" placeholder="输入 ADMIN_TOKEN" autocomplete="off" /></label><div class="buttonGroup"><button type="submit">更新浏览器</button><button id="logoutButton" type="button" class="secondary">退出</button></div></form>
+        </section>
+        <section class="panel splitPanel">
+          <div><p class="sectionLabel">Gateway Access</p><h2>浏览器网关令牌</h2><p class="muted">用于当前浏览器访问 `/api/gateway`。</p></div>
+          <form id="gatewayAuthForm" class="inlineForm"><label>Gateway Token<input id="gatewayToken" name="gatewayToken" type="password" placeholder="输入 GATEWAY_TOKEN" autocomplete="off" /></label><button type="submit">保存到浏览器</button></form>
+        </section>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

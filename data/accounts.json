@@ -1,0 +1,30 @@
+{
+  "accounts": [
+    {
+      "id": "ff81f242-d70f-4b98-a908-0cdffdf37237",
+      "name": "gateway-token-account",
+      "tokenCiphertext": "k0FCxHvDzWX3JrXZ.AQjBPP0IpoZlFZYOq6gm0Q.MJWCFe9Amv3gVVSO0C7cMy2exk4",
+      "enabled": true,
+      "usageCount": 1,
+      "leasedCount": 1,
+      "failureCount": 0,
+      "lastUsedAt": "2026-04-24T07:06:33.728Z",
+      "lastError": null,
+      "createdAt": "2026-04-24T07:06:33.635Z",
+      "updatedAt": "2026-04-24T07:06:33.728Z"
+    },
+    {
+      "id": "d03604ae-ed8b-42da-839e-8bb7a602326a",
+      "name": "audited-account",
+      "tokenCiphertext": "_UfxQni1XbgQ2wfF.heJYx6RE9v_fqvMRu6fiWA.slwLI6mX8M-BMY_bnz0YaiOR",
+      "enabled": true,
+      "usageCount": 0,
+      "leasedCount": 0,
+      "failureCount": 0,
+      "lastUsedAt": null,
+      "lastError": null,
+      "createdAt": "2026-04-24T07:06:33.775Z",
+      "updatedAt": "2026-04-24T07:06:33.775Z"
+    }
+  ]
+}

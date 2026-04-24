@@ -1,0 +1,23 @@
+services:
+  context7-gateway:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN}
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN:?set GATEWAY_TOKEN}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
+      CONTEXT7_BASE_URL: ${CONTEXT7_BASE_URL:-https://context7.com}
+      ACCOUNT_STORE_PATH: /app/data/accounts.json
+    volumes:
+      - context7-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  context7-data:

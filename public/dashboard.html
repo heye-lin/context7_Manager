@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>运行总览 - Context7 号池网关</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="dashboard">
+    <main class="appShell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brandMark">C7</span><div><strong>Context7 Gateway</strong><small>生产号池控制台</small></div></div>
+        <nav class="navList" aria-label="主导航">
+          <a href="/dashboard.html" data-nav="dashboard">运行总览</a>
+          <a href="/accounts.html" data-nav="accounts">账号池管理</a>
+          <a href="/gateway.html" data-nav="gateway">网关调试</a>
+          <a href="/security.html" data-nav="security">安全设置</a>
+        </nav>
+        <div class="sidebarCard"><span class="statusDot"></span><div><strong>控制台已启用</strong><small>API 通过 Bearer Token 保护</small></div></div>
+      </aside>
+      <section class="workspace">
+        <header class="topbar">
+          <div><p class="eyebrow">Overview</p><h1>运行总览</h1><p class="subtitle">查看账号池容量、调用量、失败量和可用状态。</p></div>
+          <button id="leaseButton" type="button" class="ghostButton">租号自检</button>
+        </header>
+        <section class="statsGrid" aria-label="账号池概览">
+          <article class="statCard"><span>总账号</span><strong id="totalAccounts">0</strong><small>已加入号池的 Key</small></article>
+          <article class="statCard success"><span>启用中</span><strong id="enabledAccounts">0</strong><small>可参与网关调度</small></article>
+          <article class="statCard warning"><span>累计失败</span><strong id="totalFailures">0</strong><small>来自手动和代理回写</small></article>
+          <article class="statCard dark"><span>累计调用</span><strong id="totalUsage">0</strong><small>成功与失败总和</small></article>
+        </section>
+        <section class="panel resultPanel">
+          <div class="panelHeader"><div><p class="sectionLabel">Status</p><h2>系统状态</h2></div><span id="message" class="toast" role="status">等待操作</span></div>
+          <div class="emptyState"><strong>生产基线已启用</strong><p>管理页和网关 API 使用两套 token；Context7 Key 加密后持久化。</p></div>
+        </section>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

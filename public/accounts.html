@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>账号池管理 - Context7 号池网关</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-page="accounts">
+    <main class="appShell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brandMark">C7</span><div><strong>Context7 Gateway</strong><small>生产号池控制台</small></div></div>
+        <nav class="navList" aria-label="主导航">
+          <a href="/dashboard.html" data-nav="dashboard">运行总览</a>
+          <a href="/accounts.html" data-nav="accounts">账号池管理</a>
+          <a href="/gateway.html" data-nav="gateway">网关调试</a>
+          <a href="/security.html" data-nav="security">安全设置</a>
+        </nav>
+        <div class="sidebarCard"><span class="statusDot"></span><div><strong>账号加密存储</strong><small>列表不返回完整 Token</small></div></div>
+      </aside>
+      <section class="workspace">
+        <header class="topbar"><div><p class="eyebrow">Pool</p><h1>账号池管理</h1><p class="subtitle">新增、启停、删除和查看 Context7 Key 的健康状态。</p></div></header>
+        <section class="contentGrid singleWide">
+          <section class="panel">
+            <div class="panelHeader"><div><p class="sectionLabel">Create</p><h2>新增 Context7 Key</h2></div><span id="message" class="toast" role="status">等待操作</span></div>
+            <form id="accountForm" class="stackForm">
+              <label>账号名称<input name="name" placeholder="例如：主号 / 备用号 / 团队 A" required /></label>
+              <label>Context7 API Key<input name="token" type="password" placeholder="ctx7sk-..." required /></label>
+              <button type="submit">加密加入号池</button>
+            </form>
+          </section>
+          <section class="panel">
+            <div class="panelHeader controlsHeader">
+              <div><p class="sectionLabel">Accounts</p><h2>账号列表</h2></div>
+              <div class="toolbar">
+                <input id="accountSearch" class="searchInput" placeholder="搜索账号名称或 Token 掩码" />
+                <select id="accountFilter" class="compactSelect"><option value="all">全部</option><option value="enabled">仅启用</option><option value="disabled">仅停用</option><option value="failed">有失败</option></select>
+                <button id="refreshButton" type="button" class="secondary">刷新</button>
+              </div>
+            </div>
+            <div id="accountCards" class="cards"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

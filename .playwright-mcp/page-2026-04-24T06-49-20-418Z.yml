@@ -1,0 +1,114 @@
+- main [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: C7
+      - generic [ref=e6]:
+        - strong [ref=e7]: Context7 Gateway
+        - generic [ref=e8]: 生产号池控制台
+    - navigation "主导航" [ref=e9]:
+      - link "总览" [ref=e10] [cursor=pointer]:
+        - /url: "#overview"
+      - link "账号池" [ref=e11] [cursor=pointer]:
+        - /url: "#accounts"
+      - link "网关调试" [ref=e12] [cursor=pointer]:
+        - /url: "#gateway"
+      - link "安全" [ref=e13] [cursor=pointer]:
+        - /url: "#security"
+    - generic [ref=e16]:
+      - strong [ref=e17]: 本地控制台
+      - generic [ref=e18]: API 通过 Bearer Token 保护
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - paragraph [ref=e22]: Production Ready Gateway
+        - heading "Context7 号池网关" [level=1] [ref=e23]
+        - paragraph [ref=e24]: 集中加密管理多个 Context7 Key，自动调度、代理调用、记录健康状态。
+      - button "租号自检" [ref=e25] [cursor=pointer]
+    - region "账号池概览" [ref=e26]:
+      - article [ref=e27]:
+        - generic [ref=e28]: 总账号
+        - strong [ref=e29]: "0"
+        - generic [ref=e30]: 已加入号池的 Key
+      - article [ref=e31]:
+        - generic [ref=e32]: 启用中
+        - strong [ref=e33]: "0"
+        - generic [ref=e34]: 可参与网关调度
+      - article [ref=e35]:
+        - generic [ref=e36]: 累计失败
+        - strong [ref=e37]: "0"
+        - generic [ref=e38]: 来自手动和代理回写
+      - article [ref=e39]:
+        - generic [ref=e40]: 累计调用
+        - strong [ref=e41]: "0"
+        - generic [ref=e42]: 成功与失败总和
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - paragraph [ref=e45]: Security
+        - heading "管理鉴权" [level=2] [ref=e46]
+        - paragraph [ref=e47]: 输入服务端配置的 ADMIN_TOKEN。Token 只保存在当前浏览器 localStorage。
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - text: Admin Token
+          - textbox "Admin Token" [ref=e50]:
+            - /placeholder: 输入 ADMIN_TOKEN
+        - button "保存" [ref=e51] [cursor=pointer]
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Create
+          - heading "新增 Context7 Key" [level=2] [ref=e57]
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - text: 账号名称
+            - textbox "账号名称" [ref=e60]:
+              - /placeholder: 例如：主号 / 备用号 / 团队 A
+          - generic [ref=e61]:
+            - text: Context7 API Key
+            - textbox "Context7 API Key" [ref=e62]:
+              - /placeholder: ctx7sk-...
+          - button "加密加入号池" [ref=e63] [cursor=pointer]
+      - generic [ref=e64]:
+        - generic [ref=e66]:
+          - paragraph [ref=e67]: Gateway Debugger
+          - heading "网关调用测试" [level=2] [ref=e68]
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - generic [ref=e71]:
+              - text: 请求方法
+              - combobox "请求方法" [ref=e72]:
+                - option "GET" [selected]
+                - option "POST"
+                - option "PUT"
+                - option "PATCH"
+                - option "DELETE"
+            - generic [ref=e73]:
+              - text: 上游路径
+              - textbox "上游路径" [ref=e74]: /api/v2/libs/search?query=react
+          - generic [ref=e75]:
+            - text: JSON 请求体
+            - textbox "JSON 请求体" [ref=e76]:
+              - /placeholder: "POST 时填写，例如 {\"libraryName\":\"react\"}"
+          - button "通过号池代理调用" [ref=e77] [cursor=pointer]
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - paragraph [ref=e81]: Response
+          - heading "最近网关响应" [level=2] [ref=e82]
+        - status [ref=e83]: 账号池已刷新。
+      - generic [ref=e84]: 暂无调用结果
+    - generic [ref=e85]:
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - paragraph [ref=e88]: Pool
+          - heading "账号池" [level=2] [ref=e89]
+        - generic [ref=e90]:
+          - textbox "搜索账号名称或 Token 掩码" [ref=e91]
+          - combobox [ref=e92]:
+            - option "全部" [selected]
+            - option "仅启用"
+            - option "仅停用"
+            - option "有失败"
+          - button "刷新" [ref=e93] [cursor=pointer]
+      - generic [ref=e95]:
+        - strong [ref=e96]: 还没有账号
+        - paragraph [ref=e97]: 添加第一个 Context7 API Key 后，网关会自动参与调度。

@@ -208,6 +208,18 @@ function quotaFromHeaders(headers) {
   return Number.isFinite(quota) && quota >= 0 ? quota : undefined;
 }
 
+function parseUpstreamBody(text) {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    return {
+      parseError: error.message,
+      raw: text,
+    };
+  }
+}
+
 async function proxyContext7Request(input, upstreamBaseUrl, pool) {
   const startedAt = Date.now();
   const lease = await maybeAwait(pool.leaseAccount());
@@ -226,7 +238,7 @@ async function proxyContext7Request(input, upstreamBaseUrl, pool) {
 
   const upstreamResponse = await fetch(upstreamUrl, options);
   const text = await upstreamResponse.text();
-  const upstream = text ? JSON.parse(text) : null;
+  const upstream = parseUpstreamBody(text);
   const durationMs = Date.now() - startedAt;
   const remainingQuota = quotaFromHeaders(upstreamResponse.headers);
 
@@ -281,7 +293,7 @@ async function testContext7Account(id, input, upstreamBaseUrl, pool) {
 
   const upstreamResponse = await fetch(upstreamUrl, options);
   const text = await upstreamResponse.text();
-  const upstream = text ? JSON.parse(text) : null;
+  const upstream = parseUpstreamBody(text);
   const durationMs = Date.now() - startedAt;
   const remainingQuota = quotaFromHeaders(upstreamResponse.headers);
 

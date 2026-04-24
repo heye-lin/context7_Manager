@@ -19,9 +19,15 @@ async function readJsonFile(path, fallback) {
 
 async function writeJsonFile(path, value) {
   await mkdir(dirname(path), { recursive: true });
-  const tempPath = `${path}.${process.pid}.${Date.now()}.tmp`;
+  const tempPath = `${path}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
   await writeFile(tempPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
   await rename(tempPath, path);
+}
+
+async function backupCorruptJsonFile(path) {
+  const backupPath = `${path}.bak-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+  await rename(path, backupPath);
+  return backupPath;
 }
 
 export function createMemoryAccountRepository(initialAccounts = []) {
@@ -130,8 +136,19 @@ export function createMemoryAuditLogger({ retention = 1000 } = {}) {
 }
 
 export function createFileAuditLogger(path, { retention = 2000 } = {}) {
+  let writeQueue = Promise.resolve();
+
   async function listRawEvents() {
-    const data = await readJsonFile(path, { events: [] });
+    let data;
+    try {
+      data = await readJsonFile(path, { events: [] });
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        await backupCorruptJsonFile(path);
+        return [];
+      }
+      throw error;
+    }
     return Array.isArray(data.events) ? data.events : [];
   }
 
@@ -144,9 +161,12 @@ export function createFileAuditLogger(path, { retention = 2000 } = {}) {
       return filterAuditEvents(await listRawEvents(), query);
     },
     async record(event) {
-      const events = await listRawEvents();
-      events.push(sanitizeAuditEvent(event));
-      await saveRawEvents(events.slice(-retention));
+      writeQueue = writeQueue.catch(() => {}).then(async () => {
+        const events = await listRawEvents();
+        events.push(sanitizeAuditEvent(event));
+        await saveRawEvents(events.slice(-retention));
+      });
+      await writeQueue;
     },
   };
 }

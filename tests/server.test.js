@@ -128,6 +128,39 @@ test('account test proxies a request through the selected account and shows quot
   });
 });
 
+test('gateway keeps non-json upstream body instead of failing JSON parse', async () => {
+  const upstream = await import('node:http').then(({ createServer: createHttpServer }) => createHttpServer((request, response) => {
+    response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
+    response.end('{"ok":true}\n{"extra":true}');
+  }));
+  await new Promise((resolve) => upstream.listen(0, resolve));
+  const { port } = upstream.address();
+
+  try {
+    await withServer(async (baseUrl) => {
+      await fetch(`${baseUrl}/api/accounts`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'raw-upstream-account', token: 'ctx7sk-raw-token' }),
+      });
+
+      const response = await fetch(`${baseUrl}/api/gateway`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ method: 'GET', path: '/broken-json' }),
+      });
+      const body = await response.json();
+
+      assert.equal(response.status, 200);
+      assert.match(body.upstream.parseError, /Unexpected non-whitespace character after JSON/);
+      assert.equal(body.upstream.raw, '{"ok":true}\n{"extra":true}');
+      assert.equal(body.account.usageCount, 1);
+    }, { upstreamBaseUrl: `http://127.0.0.1:${port}` });
+  } finally {
+    await new Promise((resolve) => upstream.close(resolve));
+  }
+});
+
 test('gateway records failures from upstream responses', async () => {
   const failingUpstream = await import('node:http').then(({ createServer: createHttpServer }) => createHttpServer((request, response) => {
     response.writeHead(429, { 'content-type': 'application/json; charset=utf-8' });

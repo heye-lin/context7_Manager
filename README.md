@@ -208,3 +208,33 @@ Authorization: Bearer <GATEWAY_TOKEN>
 - 系统更新接口为 `GET /api/system/version`、`GET /api/system/check-updates` 和 `POST /api/system/update`，均使用 `ADMIN_TOKEN` 鉴权。
 - 当前项目默认是 `source` 构建类型，不再执行在线 `git pull`；如发现新版本，请通过 CI/CD、Release 包或手动部署更新，完成后重启服务。
 - 该设计避免在生产运行进程中直接修改工作区代码，也避免覆盖线上临时文件。
+
+## Release Commands
+
+Run one of the commands below locally to bump `package.json`, create a `v*` tag, and push it to GitHub. The tag push triggers GitHub Actions to create a Release and publish the GHCR image.
+
+```bash
+npm run release:patch  # 0.1.0 -> 0.1.1
+npm run release:minor  # 0.1.0 -> 0.2.0
+npm run release:major  # 0.1.0 -> 1.0.0
+```
+
+After the release workflow finishes, update the remote server:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env pull
+docker compose -f docker-compose.prod.yml --env-file .env up -d
+```
+
+
+## License
+
+This project is released under the MIT License. See `LICENSE` for details.
+
+## Disclaimer
+
+This project is an open-source personal Context7 key pool gateway and management console. It is not affiliated with, endorsed by, or sponsored by Context7.
+
+Use this software at your own risk. You are responsible for complying with Context7 terms, API limits, local laws, and any policies that apply to your account or deployment environment.
+
+Do not expose admin tokens, gateway tokens, Context7 keys, encryption keys, logs, or persisted data files publicly. The authors and contributors are not responsible for account suspension, quota loss, data loss, security incidents, service interruption, or any direct or indirect damages caused by deploying or using this software.

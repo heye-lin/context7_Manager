@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
         id: package
         shell: bash
         run: |
-          node -e "const fs=require('fs'); const pkg=require('./package.json'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + pkg.version + '\n');"
+          node -e "const fs=require('fs'); const ref=process.env.GITHUB_REF || ''; const pkg=require('./package.json'); const version=ref.startsWith('refs/tags/v') ? ref.replace('refs/tags/v', '') : pkg.version; fs.appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + version + '\n');"
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -57,3 +57,10 @@ jobs:
             VERSION=${{ steps.package.outputs.version }}
             COMMIT=${{ github.sha }}
             BUILD_TYPE=docker
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          make_latest: true

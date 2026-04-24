@@ -33,8 +33,8 @@ function shortCommit(commit = '') {
 function updateCommands(dockerImage) {
   return {
     docker_compose_latest: [
-      'docker compose pull',
-      'docker compose up -d',
+      'docker compose -f docker-compose.prod.yml --env-file .env pull',
+      'docker compose -f docker-compose.prod.yml --env-file .env up -d',
     ],
     docker_run_latest: [
       `docker pull ${dockerImage}`,

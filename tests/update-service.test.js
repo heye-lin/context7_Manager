@@ -116,7 +116,10 @@ test('update service falls back to latest main commit when release is missing', 
     assert.equal(info.update_mode, 'latest-image');
     assert.equal(info.latest_commit, 'abcdef123456');
     assert.match(info.warning, /No GitHub Release found/);
-    assert.deepEqual(info.update_commands.docker_compose_latest, ['docker compose pull', 'docker compose up -d']);
+    assert.deepEqual(info.update_commands.docker_compose_latest, [
+      'docker compose -f docker-compose.prod.yml --env-file .env pull',
+      'docker compose -f docker-compose.prod.yml --env-file .env up -d',
+    ]);
     assert.equal(updated.need_restart, true);
     assert.match(updated.message, /Pull latest image/);
     assert.equal(calls.filter((url) => String(url).includes('/commits/main')).length, 2);

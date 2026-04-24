@@ -372,7 +372,7 @@ function renderUpdateInfo(info, { showDetails = false } = {}) {
   elements.currentVersion.textContent = info.current_version || info.version || '-';
   elements.latestVersion.textContent = info.latest_version || info.version || '-';
   elements.buildType.textContent = info.build_type || 'source';
-  elements.updateState.textContent = info.warning ? '检查失败' : (info.has_update ? '有新版本' : '已是最新');
+  elements.updateState.textContent = info.has_update ? '有新版本' : (info.warning ? '检查受限' : '已是最新');
   if (elements.updateCommandBox && elements.updateCommands) {
     const commands = info.update_commands?.docker_compose_latest || info.update_commands?.source_deploy || [];
     elements.updateCommandBox.hidden = !commands.length;
